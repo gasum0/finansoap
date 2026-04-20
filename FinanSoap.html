@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinanSoap — Rosasenjabonarte</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+*{font-family:'Poppins',sans-serif;box-sizing:border-box;}
+body{background:#0b1120;color:#f1f5f9;margin:0;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#334155;border-radius:4px;}
+.sidebar{width:256px;min-height:100vh;background:#0f172a;border-right:1px solid rgba(99,102,241,0.15);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:50;transition:transform .3s;}
+.sidebar.closed{transform:translateX(-100%);}
+.main{margin-left:256px;min-height:100vh;display:flex;flex-direction:column;}
+@media(max-width:768px){.main{margin-left:0;}.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}}
+.card{background:linear-gradient(145deg,#1e293b,#1a2744);border:1px solid rgba(99,102,241,0.12);border-radius:16px;}
+.btn-primary{background:linear-gradient(90deg,#6366f1,#a855f7,#ec4899);color:#fff;border:none;padding:8px 18px;border-radius:12px;font-weight:600;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:opacity .2s;}
+.btn-primary:hover{opacity:.88;}
+.btn-secondary{background:#1e293b;color:#cbd5e1;border:1px solid #334155;padding:8px 18px;border-radius:12px;font-weight:500;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .2s;}
+.btn-secondary:hover{background:#334155;}
+.btn-ghost{background:transparent;color:#94a3b8;border:none;padding:6px 12px;border-radius:10px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:background .2s;}
+.btn-ghost:hover{background:#1e293b;color:#fff;}
+.btn-danger{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);padding:6px 14px;border-radius:10px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.input{width:100%;background:#1e293b;border:1px solid #334155;color:#f1f5f9;border-radius:12px;padding:9px 14px;font-size:13px;outline:none;transition:border .2s;}
+.input:focus{border-color:rgba(99,102,241,.5);}
+.input option{background:#1e293b;}
+.label{display:block;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;}
+.nav-link{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:12px;font-size:13px;font-weight:500;color:#94a3b8;cursor:pointer;transition:all .2s;position:relative;text-decoration:none;}
+.nav-link:hover{background:rgba(99,102,241,.08);color:#e2e8f0;}
+.nav-link.active{background:rgba(99,102,241,.12);color:#a78bfa;}
+.nav-link.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:linear-gradient(180deg,#6366f1,#a855f7);border-radius:0 4px 4px 0;}
+.page{display:none;animation:fadeUp .35s ease both;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal-box{background:#0f172a;border:1px solid #334155;border-radius:20px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;animation:fadeUp .25s ease both;}
+.modal-box.wide{max-width:700px;}
+.table-row{border-bottom:1px solid rgba(51,65,85,.4);}
+.table-row:hover{background:rgba(30,41,59,.5);}
+.stat-card{transition:transform .3s,box-shadow .3s;cursor:default;}
+.stat-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(99,102,241,.25);}
+.kanban-col{min-width:230px;flex-shrink:0;}
+.toast{position:fixed;bottom:24px;right:24px;z-index:200;background:#1e293b;border:1px solid #334155;border-radius:14px;padding:12px 18px;font-size:13px;display:flex;align-items:center;gap:10px;animation:fadeUp .3s ease both;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.glow{box-shadow:0 0 20px rgba(99,102,241,.25);}
+.progress-bar{height:6px;background:#1e293b;border-radius:999px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:999px;transition:width .5s ease;}
+select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
+</style>
+</head>
+<body>
+
+<!-- Overlay mobile -->
+<div id="overlay" onclick="closeSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div style="padding:20px;border-bottom:1px solid rgba(99,102,241,.12);">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:40px;height:40px;background:linear-gradient(135deg,#6366f1,#a855f7,#ec4899);border-radius:12px;display:flex;align-items:center;justify-content:center;" class="glow">
+        <i class="fas fa-spa" style="color:#fff;font-size:18px;"></i>
+      </div>
+      <div>
+        <div style="color:#fff;font-weight:700;font-size:16px;line-height:1.2;">Rosas</div>
+        <div style="color:#a78bfa;font-size:10px;font-weight:700;letter-spacing:.12em;">ENJABONARTE</div>
+      </div>
+    </div>
+  </div>
+
+  <nav style="padding:12px;flex:1;overflow-y:auto;">
+    <div style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.1em;padding:8px 16px 4px;">Menú</div>
+    <a class="nav-link active" onclick="goTo('dashboard')" id="nav-dashboard"><i class="fas fa-home" style="width:16px;text-align:center;"></i> Inicio</a>
+    <a class="nav-link" onclick="goTo('pedidos')" id="nav-pedidos"><i class="fas fa-shopping-cart" style="width:16px;text-align:center;"></i> Pedidos</a>
+    <a class="nav-link" onclick="goTo('productos')" id="nav-productos"><i class="fas fa-cube" style="width:16px;text-align:center;"></i> Productos</a>
+    <a class="nav-link" onclick="goTo('inventario')" id="nav-inventario"><i class="fas fa-warehouse" style="width:16px;text-align:center;"></i> Inventario</a>
+    <a class="nav-link" onclick="goTo('financiero')" id="nav-financiero"><i class="fas fa-chart-line" style="width:16px;text-align:center;"></i> Financiero</a>
+    <a class="nav-link" onclick="goTo('clientes')" id="nav-clientes"><i class="fas fa-users" style="width:16px;text-align:center;"></i> Clientes</a>
+  </nav>
+
+  <div style="padding:12px;border-top:1px solid rgba(99,102,241,.1);">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(30,41,59,.6);border-radius:12px;">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#a855f7);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:13px;flex-shrink:0;">CR</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:#fff;">Carla Rosas</div>
+        <div style="font-size:11px;color:#64748b;">Administradora</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main" id="mainContent">
+  <!-- Topbar -->
+  <header style="position:sticky;top:0;z-index:30;background:rgba(11,17,32,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(99,102,241,.1);padding:14px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button onclick="toggleSidebar()" style="display:none;background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;padding:4px;" id="menuBtn"><i class="fas fa-bars"></i></button>
+        <div>
+          <div style="font-size:18px;font-weight:700;color:#fff;" id="pageTitle">Dashboard</div>
+          <div style="font-size:11px;color:#475569;" id="pageSub">Visión general de tu negocio</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="goTo('pedidos');setModalNuevoPedido()" style="background:linear-gradient(90deg,#6366f1,#a855f7);color:#fff;border:none;padding:8px 16px;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fas fa-plus"></i> <span class="hide-sm">Nuevo pedido</span></button>
+        <div id="alertaBell" onclick="goTo('inventario')" style="position:relative;cursor:pointer;width:36px;height:36px;background:#1e293b;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+          <i class="fas fa-bell" style="color:#94a3b8;font-size:13px;"></i>
+          <span id="alertCount" style="display:none;position:absolute;top:-4px;right:-4px;width:18px;height:18px;background:#ef4444;border-radius:50%;font-size:10px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;">0</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGES -->
+  <div style="padding:20px 24px;flex:1;">
+
+    <!-- ═══════════ DASHBOARD ═══════════ -->
+    <div class="page active" id="page-dashboard">
+      <div style="margin-bottom:20px;">
+        <div style="font-size:20px;font-weight:700;color:#fff;">¡Hola de nuevo, Carla! 👋</div>
+        <div style="color:#64748b;font-size:13px;margin-top:2px;" id="dashSubtitle">Aquí está el resumen de hoy</div>
+      </div>
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px;" id="statsGrid"></div>
+      <!-- Gráfico + Alertas -->
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;margin-bottom:20px;" id="dashGrid">
+        <div class="card" style="padding:20px;">
+          <div style="font-weight:600;color:#fff;margin-bottom:4px;">Ingresos del mes</div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:16px;">Distribución semanal</div>
+          <canvas id="chartIngresos" height="140"></canvas>
+        </div>
+        <div class="card" style="padding:20px;" id="alertasPanel"></div>
+      </div>
+      <!-- Bottom grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" id="dashBottom">
+        <div class="card" style="padding:20px;" id="pedidosRecientesPanel"></div>
+        <div class="card" style="padding:20px;" id="rentabilidadPanel"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ PEDIDOS ═══════════ -->
+    <div class="page" id="page-pedidos">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <input class="input" id="filtroPedidos" placeholder="Buscar cliente o código..." style="max-width:260px;" oninput="renderPedidos()">
+        <div style="display:flex;background:#1e293b;border-radius:12px;padding:4px;gap:4px;">
+          <button onclick="setVistaPedidos('kanban')" id="btnKanban" style="padding:6px 14px;border-radius:8px;background:#6366f1;color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;">
+            <i class="fas fa-columns"></i> Kanban
+          </button>
+          <button onclick="setVistaPedidos('lista')" id="btnLista" style="padding:6px 14px;border-radius:8px;background:transparent;color:#94a3b8;border:none;font-size:12px;font-weight:500;cursor:pointer;">
+            <i class="fas fa-list"></i> Lista
+          </button>
+        </div>
+        <button class="btn-primary" style="margin-left:auto;" onclick="abrirModalNuevoPedido()"><i class="fas fa-plus"></i> Nuevo pedido</button>
+      </div>
+      <div id="pedidosContainer"></div>
+    </div>
+
+    <!-- ═══════════ PRODUCTOS ═══════════ -->
+    <div class="page" id="page-productos">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <input class="input" id="filtroProductos" placeholder="Buscar producto o SKU..." style="max-width:260px;" oninput="renderProductos()">
+        <button class="btn-primary" style="margin-left:auto;" onclick="abrirModalProducto()"><i class="fas fa-plus"></i> Nuevo producto</button>
+      </div>
+      <div id="productosGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>
+    </div>
+
+    <!-- ═══════════ INVENTARIO ═══════════ -->
+    <div class="page" id="page-inventario">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <div id="alertasBanner"></div>
+        <button class="btn-primary" style="margin-left:auto;" onclick="abrirModalNuevoInsumo()"><i class="fas fa-plus"></i> Nuevo insumo</button>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;" id="tablaInsumos"></table>
+      </div>
+    </div>
+
+    <!-- ═══════════ FINANCIERO ═══════════ -->
+    <div class="page" id="page-financiero">
+      <!-- Tabs -->
+      <div style="display:flex;gap:4px;background:#1e293b;border-radius:14px;padding:4px;width:fit-content;margin-bottom:20px;flex-wrap:wrap;">
+        <button onclick="setTabFin('resumen')" id="tabFin-resumen" class="tab-fin active-tab" style="padding:8px 16px;border-radius:10px;background:#6366f1;color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;">Resumen</button>
+        <button onclick="setTabFin('movimientos')" id="tabFin-movimientos" class="tab-fin" style="padding:8px 16px;border-radius:10px;background:transparent;color:#94a3b8;border:none;font-size:12px;font-weight:500;cursor:pointer;">Movimientos</button>
+        <button onclick="setTabFin('rentabilidad')" id="tabFin-rentabilidad" class="tab-fin" style="padding:8px 16px;border-radius:10px;background:transparent;color:#94a3b8;border:none;font-size:12px;font-weight:500;cursor:pointer;">Rentabilidad</button>
+      </div>
+      <div id="finContent"></div>
+    </div>
+
+    <!-- ═══════════ CLIENTES ═══════════ -->
+    <div class="page" id="page-clientes">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <input class="input" id="filtroClientes" placeholder="Buscar cliente..." style="max-width:260px;" oninput="renderClientes()">
+        <button class="btn-primary" style="margin-left:auto;" onclick="abrirModalCliente()"><i class="fas fa-user-plus"></i> Nuevo cliente</button>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;" id="tablaClientes"></table>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+</div><!-- /main -->
+
+<!-- ════════════════ MODALS ════════════════ -->
+<div class="modal-overlay" id="modalOverlay" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" id="modalBox">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #1e293b;">
+      <div style="font-weight:600;color:#fff;font-size:15px;" id="modalTitle">Modal</div>
+      <button onclick="closeModal()" style="background:none;border:none;color:#64748b;font-size:16px;cursor:pointer;padding:4px;"><i class="fas fa-times"></i></button>
+    </div>
+    <div style="padding:20px 24px;" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" style="display:none;"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  STORAGE — todo en localStorage
+// ════════════════════════════════════════════════
+const DB = {
+  get: k => { try { return JSON.parse(localStorage.getItem('fs_'+k)) || [] } catch { return [] } },
+  set: (k, v) => localStorage.setItem('fs_'+k, JSON.stringify(v)),
+  getObj: (k, def={}) => { try { return JSON.parse(localStorage.getItem('fs_'+k)) || def } catch { return def } },
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7) }
+function hoy() { return new Date().toISOString().split('T')[0] }
+function fmtCOP(n) { return new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n||0) }
+function fmtFecha(f) { if(!f) return '—'; try{return new Date(f+'T00:00:00').toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'})}catch{return f} }
+function tiempoRelativo(ts) {
+  if(!ts) return ''
+  const diff = Date.now() - new Date(ts).getTime()
+  const min = Math.floor(diff/60000)
+  if(min<1) return 'Hace un momento'
+  if(min<60) return `Hace ${min} min`
+  const h = Math.floor(min/60)
+  if(h<24) return `Hace ${h}h`
+  return `Hace ${Math.floor(h/24)}d`
+}
+
+const ESTADO_BADGE = {
+  pendiente:      {bg:'rgba(245,158,11,.15)',color:'#fbbf24',label:'Pendiente'},
+  en_preparacion: {bg:'rgba(59,130,246,.15)',color:'#60a5fa',label:'En preparación'},
+  listo:          {bg:'rgba(139,92,246,.15)', color:'#a78bfa',label:'Listo'},
+  despachado:     {bg:'rgba(6,182,212,.15)',  color:'#22d3ee',label:'Despachado'},
+  entregado:      {bg:'rgba(16,185,129,.15)', color:'#34d399',label:'Entregado'},
+  cancelado:      {bg:'rgba(239,68,68,.15)',  color:'#f87171',label:'Cancelado'},
+}
+const TRANSICIONES = {
+  pendiente:['en_preparacion','cancelado'],
+  en_preparacion:['listo','cancelado'],
+  listo:['despachado','cancelado'],
+  despachado:['entregado'],
+  entregado:[], cancelado:[],
+}
+function badgeEstado(estado) {
+  const c = ESTADO_BADGE[estado] || ESTADO_BADGE.pendiente
+  return `<span class="badge" style="background:${c.bg};color:${c.color};">${c.label}</span>`
+}
+
+// ── Datos iniciales (seed) ──
+function initData() {
+  if(DB.get('insumos').length) return // ya inicializado
+
+  DB.set('insumos',[
+    {id:'ins1',nombre:'Base de glicerina',unidad:'g',stock:5000,stockMin:1000,costo:12,proveedor:'Proveedor local'},
+    {id:'ins2',nombre:'Colorante cosmético',unidad:'ml',stock:200,stockMin:50,costo:80,proveedor:'Proveedor local'},
+    {id:'ins3',nombre:'Esencia / fragancia',unidad:'ml',stock:300,stockMin:60,costo:120,proveedor:'Proveedor local'},
+    {id:'ins4',nombre:'Empaque (bolsa+sticker)',unidad:'und',stock:500,stockMin:100,costo:800,proveedor:'Imprenta'},
+    {id:'ins5',nombre:'Tea (mecha velas)',unidad:'cm',stock:2000,stockMin:300,costo:15,proveedor:'Proveedor local'},
+    {id:'ins6',nombre:'Parafina / cera soya',unidad:'g',stock:3000,stockMin:500,costo:8,proveedor:'Proveedor local'},
+    {id:'ins7',nombre:'Sal de mar',unidad:'g',stock:2000,stockMin:400,costo:4,proveedor:'Proveedor local'},
+    {id:'ins8',nombre:'Aceite portador',unidad:'ml',stock:1000,stockMin:200,costo:35,proveedor:'Proveedor local'},
+  ])
+
+  DB.set('productos',[
+    {id:'prod1',nombre:'Jabón de glicerina 100g',sku:'JAB-100G',categoria:'Jabones',precio:15000,stock:30,stockMin:10,unidad:'unidad',activo:true,
+     receta:[{insumoId:'ins1',cant:100},{insumoId:'ins2',cant:2},{insumoId:'ins3',cant:3},{insumoId:'ins4',cant:1}]},
+    {id:'prod2',nombre:'Jabón de glicerina 200g',sku:'JAB-200G',categoria:'Jabones',precio:25000,stock:20,stockMin:5,unidad:'unidad',activo:true,
+     receta:[{insumoId:'ins1',cant:200},{insumoId:'ins2',cant:4},{insumoId:'ins3',cant:6},{insumoId:'ins4',cant:1}]},
+    {id:'prod3',nombre:'Vela aromática 150g',sku:'VEL-150',categoria:'Velas',precio:28000,stock:15,stockMin:5,unidad:'unidad',activo:true,
+     receta:[{insumoId:'ins6',cant:150},{insumoId:'ins5',cant:15},{insumoId:'ins3',cant:5},{insumoId:'ins4',cant:1}]},
+    {id:'prod4',nombre:'Sales de baño 200g',sku:'SAL-200',categoria:'Baño',precio:18000,stock:25,stockMin:8,unidad:'unidad',activo:true,
+     receta:[{insumoId:'ins7',cant:180},{insumoId:'ins8',cant:20},{insumoId:'ins3',cant:2},{insumoId:'ins4',cant:1}]},
+    {id:'prod5',nombre:'Exfoliante corporal 150g',sku:'EXF-150',categoria:'Baño',precio:22000,stock:20,stockMin:5,unidad:'unidad',activo:true,
+     receta:[{insumoId:'ins7',cant:120},{insumoId:'ins8',cant:30},{insumoId:'ins3',cant:2},{insumoId:'ins4',cant:1}]},
+    {id:'prod6',nombre:'Curso: Fabricación de jabones',sku:'CURSO-01',categoria:'Cursos',precio:120000,stock:30,stockMin:0,unidad:'cupo',activo:true,receta:[]},
+  ])
+
+  DB.set('clientes',[
+    {id:'cli1',nombre:'María González',telefono:'3001234567',email:'maria@gmail.com',direccion:'Calle 45 #12-30 Bogotá',notas:'',creado:hoy()},
+    {id:'cli2',nombre:'Distribuciones Artesanal',telefono:'3109876543',email:'',direccion:'Carrera 7 #80-15 Bogotá',notas:'Cliente mayorista',creado:hoy()},
+    {id:'cli3',nombre:'Laura Pérez',telefono:'3205551234',email:'laura.p@gmail.com',direccion:'',notas:'',creado:hoy()},
+  ])
+
+  // Pedidos de ejemplo
+  DB.set('pedidos',[
+    {id:'ped1',codigo:'PED-001',clienteId:'cli1',estado:'pendiente',metodoPago:'nequi',canal:'manual',total:30000,pagoConfirmado:false,notas:'',creado:new Date(Date.now()-3600000).toISOString(),
+     items:[{productoId:'prod1',cantidad:2,precio:15000,subtotal:30000}]},
+    {id:'ped2',codigo:'PED-002',clienteId:'cli2',estado:'en_preparacion',metodoPago:'transferencia',canal:'manual',total:75000,pagoConfirmado:false,notas:'Pedido mayorista',creado:new Date(Date.now()-7200000).toISOString(),
+     items:[{productoId:'prod1',cantidad:2,precio:15000,subtotal:30000},{productoId:'prod4',cantidad:2,precio:18000,subtotal:36000},{productoId:'prod5',cantidad:1,precio:22000,subtotal:22000}]},
+  ])
+
+  // Movimientos financieros del mes
+  const mesInicio = hoy().slice(0,8)+'01'
+  DB.set('movimientos',[
+    {id:'mov1',tipo:'ingreso',categoria:'venta',monto:45000,descripcion:'Venta pedido PED-001',canal:'nequi',fecha:hoy(),pedidoId:'ped1'},
+    {id:'mov2',tipo:'egreso',categoria:'compra_insumo',monto:85000,descripcion:'Compra glicerina',canal:'transferencia',fecha:hoy()},
+    {id:'mov3',tipo:'egreso',categoria:'gasto_operativo',monto:25000,descripcion:'Gas para producción',canal:'efectivo',fecha:hoy()},
+  ])
+}
+
+// ── Calcular costo de producción ──
+function calcularCosto(producto) {
+  const insumos = DB.get('insumos')
+  if(!producto.receta || !producto.receta.length) return 0
+  return producto.receta.reduce((total, r) => {
+    const ins = insumos.find(i => i.id === r.insumoId)
+    return total + (ins ? ins.costo * r.cant : 0)
+  }, 0)
+}
+function calcularMargen(producto) {
+  const costo = calcularCosto(producto)
+  if(!producto.precio) return 0
+  return ((producto.precio - costo) / producto.precio * 100)
+}
+
+// ════════════════════════════════════════════════
+//  NAVEGACIÓN
+// ════════════════════════════════════════════════
+const PAGES = {
+  dashboard:  {titulo:'Dashboard',       sub:'Visión general del negocio'},
+  pedidos:    {titulo:'Pedidos',         sub:'Gestiona y sigue tus pedidos'},
+  productos:  {titulo:'Productos',       sub:'Catálogo y recetas'},
+  inventario: {titulo:'Inventario',      sub:'Stock de materias primas'},
+  financiero: {titulo:'Financiero',      sub:'Ingresos, egresos y márgenes'},
+  clientes:   {titulo:'Clientes',        sub:'Base de clientes'},
+}
+
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'))
+  document.getElementById('page-'+page).classList.add('active')
+  const navEl = document.getElementById('nav-'+page)
+  if(navEl) navEl.classList.add('active')
+  const info = PAGES[page] || {}
+  document.getElementById('pageTitle').textContent = info.titulo || page
+  document.getElementById('pageSub').textContent = info.sub || ''
+  closeSidebar()
+  // Render de la página
+  if(page === 'dashboard') renderDashboard()
+  if(page === 'pedidos') renderPedidos()
+  if(page === 'productos') renderProductos()
+  if(page === 'inventario') renderInventario()
+  if(page === 'financiero') renderFinanciero()
+  if(page === 'clientes') renderClientes()
+}
+
+function toggleSidebar() {
+  const s = document.getElementById('sidebar')
+  const ov = document.getElementById('overlay')
+  s.classList.toggle('open')
+  ov.style.display = s.classList.contains('open') ? 'block' : 'none'
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open')
+  document.getElementById('overlay').style.display = 'none'
+}
+
+// ════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════
+let chartIngresosInstance = null
+
+function renderDashboard() {
+  const pedidos = DB.get('pedidos')
+  const movimientos = DB.get('movimientos')
+  const productos = DB.get('productos')
+  const insumos = DB.get('insumos')
+
+  const mes = hoy().slice(0,7)
+  const movMes = movimientos.filter(m => m.fecha && m.fecha.startsWith(mes))
+  const ingresosMes = movMes.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.monto,0)
+  const egresosMes = movMes.filter(m=>m.tipo==='egreso').reduce((s,m)=>s+m.monto,0)
+  const utilidad = ingresosMes - egresosMes
+  const pendientes = pedidos.filter(p=>p.estado==='pendiente').length
+  const alertas = insumos.filter(i=>i.stock <= i.stockMin)
+
+  document.getElementById('dashSubtitle').textContent =
+    `Resumen de ${new Date().toLocaleDateString('es-CO',{month:'long',year:'numeric'})}`
+
+  // Stats
+  const statsData = [
+    {icon:'fa-arrow-up',color:'from-emerald-500 to-teal-500',label:'Ingresos del mes',valor:fmtCOP(ingresosMes)},
+    {icon:'fa-shopping-bag',color:'from-purple-500 to-pink-500',label:'Pedidos pendientes',valor:pendientes},
+    {icon:'fa-exclamation-triangle',color:'from-orange-500 to-red-500',label:'Alertas stock',valor:alertas.length},
+    {icon:'fa-coins',color:utilidad>=0?'from-indigo-500 to-purple-500':'from-red-500 to-pink-500',label:'Utilidad neta',valor:fmtCOP(utilidad)},
+  ]
+  document.getElementById('statsGrid').innerHTML = statsData.map(s=>`
+    <div class="card stat-card" style="padding:20px;">
+      <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:14px;">
+        <div style="width:42px;height:42px;background:linear-gradient(135deg,var(--tw-gradient-from,#6366f1),var(--tw-gradient-to,#a855f7));border-radius:12px;display:flex;align-items:center;justify-content:center;background:${s.color.includes('emerald')?'linear-gradient(135deg,#10b981,#0d9488)':s.color.includes('purple')?'linear-gradient(135deg,#a855f7,#ec4899)':s.color.includes('orange')?'linear-gradient(135deg,#f97316,#ef4444)':'linear-gradient(135deg,#6366f1,#a855f7)'};">
+          <i class="fas ${s.icon}" style="color:#fff;font-size:16px;"></i>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:4px;">${s.label}</div>
+      <div style="font-size:22px;font-weight:700;color:#fff;">${s.valor}</div>
+    </div>
+  `).join('')
+
+  // Gráfico de ingresos
+  const ctx = document.getElementById('chartIngresos').getContext('2d')
+  if(chartIngresosInstance) chartIngresosInstance.destroy()
+  const dias = ['L','M','X','J','V','S','D']
+  const vals = dias.map((_,i)=> Math.round(ingresosMes * [.12,.18,.09,.22,.15,.14,.10][i]))
+  chartIngresosInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dias,
+      datasets: [{
+        data: vals, fill: true,
+        borderColor: '#6366f1', borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#6366f1',
+        backgroundColor: (ctx) => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,140)
+          g.addColorStop(0,'rgba(99,102,241,.3)'); g.addColorStop(1,'rgba(99,102,241,0)')
+          return g
+        },
+        tension: 0.4,
+      }]
+    },
+    options: {
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>fmtCOP(v.raw)}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:11}}},y:{display:false}},
+      responsive:true, maintainAspectRatio:false,
+    }
+  })
+
+  // Alertas panel
+  const ap = document.getElementById('alertasPanel')
+  ap.innerHTML = `<div style="font-weight:600;color:#fff;margin-bottom:14px;">Alertas de stock
+    ${alertas.length?`<span class="badge" style="background:rgba(239,68,68,.15);color:#f87171;margin-left:8px;">${alertas.length}</span>`:''}
+  </div>`
+  if(!alertas.length) {
+    ap.innerHTML += `<div style="text-align:center;padding:24px 0;"><i class="fas fa-check-circle" style="color:#34d399;font-size:28px;display:block;margin-bottom:8px;"></i><div style="font-size:12px;color:#64748b;">Todo el stock está bien</div></div>`
+  } else {
+    ap.innerHTML += alertas.slice(0,5).map(a=>`
+      <div style="display:flex;gap:10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:12px;padding:10px 12px;margin-bottom:8px;">
+        <i class="fas fa-exclamation-triangle" style="color:#f87171;font-size:12px;margin-top:2px;flex-shrink:0;"></i>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#fff;">${a.nombre}</div>
+          <div style="font-size:11px;color:#64748b;">Stock: ${a.stock} ${a.unidad} (mín: ${a.stockMin})</div>
+        </div>
+      </div>
+    `).join('')
+    ap.innerHTML += `<button class="btn-ghost" style="width:100%;justify-content:center;margin-top:4px;" onclick="goTo('inventario')">Ver inventario →</button>`
+  }
+
+  // Actualizar badge campana
+  const alertCount = document.getElementById('alertCount')
+  if(alertas.length) { alertCount.textContent = alertas.length; alertCount.style.display='flex' }
+  else alertCount.style.display='none'
+
+  // Pedidos recientes
+  const prp = document.getElementById('pedidosRecientesPanel')
+  const recientes = [...pedidos].sort((a,b)=>new Date(b.creado)-new Date(a.creado)).slice(0,5)
+  const clientes = DB.get('clientes')
+  prp.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <div style="font-weight:600;color:#fff;">Pedidos recientes</div>
+    <button class="btn-ghost" onclick="goTo('pedidos')">Ver todos →</button>
+  </div>`
+  if(!recientes.length) {
+    prp.innerHTML += `<div style="text-align:center;padding:24px 0;color:#475569;font-size:12px;"><i class="fas fa-shopping-cart" style="font-size:24px;display:block;margin-bottom:8px;"></i>Sin pedidos aún</div>`
+  } else {
+    prp.innerHTML += recientes.map(p => {
+      const cli = clientes.find(c=>c.id===p.clienteId)
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='rgba(30,41,59,.6)'" onmouseout="this.style.background=''" onclick="goTo('pedidos')">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;font-weight:500;color:#fff;truncate">${cli?.nombre||'?'}</span>
+            ${badgeEstado(p.estado)}
+          </div>
+          <div style="font-size:11px;color:#475569;">${p.codigo} · ${tiempoRelativo(p.creado)}</div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#818cf8;flex-shrink:0;">${fmtCOP(p.total)}</div>
+      </div>`
+    }).join('')
+  }
+
+  // Rentabilidad
+  const rp = document.getElementById('rentabilidadPanel')
+  rp.innerHTML = `<div style="font-weight:600;color:#fff;margin-bottom:14px;">Rentabilidad por producto</div>`
+  const prodsActivos = productos.filter(p=>p.activo).slice(0,5)
+  prodsActivos.forEach(p => {
+    const m = calcularMargen(p)
+    const color = m<=0?'#ef4444':m<20?'#f59e0b':'#10b981'
+    rp.innerHTML += `<div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:12px;color:#e2e8f0;truncate">${p.nombre.split(' ').slice(0,4).join(' ')}</span>
+        <span style="font-size:12px;font-weight:700;color:${color};">${m.toFixed(1)}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.max(0,Math.min(100,m))}%;background:${m<=0?'#ef4444':m<20?'#f59e0b':'linear-gradient(90deg,#6366f1,#10b981)'};"></div></div>
+    </div>`
+  })
+}
+
+// ════════════════════════════════════════════════
+//  PEDIDOS
+// ════════════════════════════════════════════════
+let vistaPedidos = 'kanban'
+
+function setVistaPedidos(v) {
+  vistaPedidos = v
+  document.getElementById('btnKanban').style.background = v==='kanban'?'#6366f1':'transparent'
+  document.getElementById('btnKanban').style.color = v==='kanban'?'#fff':'#94a3b8'
+  document.getElementById('btnLista').style.background = v==='lista'?'#6366f1':'transparent'
+  document.getElementById('btnLista').style.color = v==='lista'?'#fff':'#94a3b8'
+  renderPedidos()
+}
+
+function renderPedidos() {
+  const filtro = (document.getElementById('filtroPedidos')?.value||'').toLowerCase()
+  const pedidos = DB.get('pedidos')
+  const clientes = DB.get('clientes')
+  let lista = pedidos.map(p => ({...p, clienteNombre: clientes.find(c=>c.id===p.clienteId)?.nombre||'?'}))
+  if(filtro) lista = lista.filter(p => p.clienteNombre.toLowerCase().includes(filtro) || p.codigo.toLowerCase().includes(filtro))
+  lista.sort((a,b)=>new Date(b.creado)-new Date(a.creado))
+
+  const cont = document.getElementById('pedidosContainer')
+  if(vistaPedidos==='kanban') {
+    const cols = ['pendiente','en_preparacion','listo','despachado','entregado']
+    cont.innerHTML = `<div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:12px;">${
+      cols.map(estado => {
+        const items = lista.filter(p=>p.estado===estado)
+        const c = ESTADO_BADGE[estado]
+        return `<div class="kanban-col">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span class="badge" style="background:${c.bg};color:${c.color};">${c.label}</span>
+            <span style="font-size:12px;color:#475569;font-weight:600;">${items.length}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            ${items.length===0
+              ? `<div style="border:2px dashed #1e293b;border-radius:14px;padding:24px;text-align:center;font-size:11px;color:#334155;">Sin pedidos</div>`
+              : items.map(p=>`
+                <div class="card" style="padding:14px;cursor:pointer;transition:all .2s;" onclick="abrirDetallePedido('${p.id}')"
+                  onmouseover="this.style.borderColor='rgba(99,102,241,.35)'" onmouseout="this.style.borderColor='rgba(99,102,241,.12)'">
+                  <div style="display:flex;align-items:start;justify-content:space-between;gap:8px;margin-bottom:8px;">
+                    <div style="font-size:13px;font-weight:600;color:#fff;">${p.clienteNombre}</div>
+                    <div style="font-size:10px;font-family:monospace;color:#818cf8;flex-shrink:0;">${p.codigo.slice(-5)}</div>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+                    ${(p.items||[]).slice(0,2).map(it=>{
+                      const prod = DB.get('productos').find(pr=>pr.id===it.productoId)
+                      return `<span style="font-size:10px;background:#1e293b;color:#94a3b8;padding:2px 8px;border-radius:999px;">${it.cantidad}× ${prod?.nombre?.split(' ').slice(0,3).join(' ')||'?'}</span>`
+                    }).join('')}
+                    ${(p.items||[]).length>2?`<span style="font-size:10px;color:#475569;">+${p.items.length-2}</span>`:''}
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:14px;font-weight:700;color:#34d399;">${fmtCOP(p.total)}</span>
+                    <span style="font-size:10px;color:#475569;">${tiempoRelativo(p.creado)}</span>
+                  </div>
+                  ${!p.pagoConfirmado?`<div style="margin-top:8px;font-size:10px;color:#fbbf24;"><i class="fas fa-clock" style="margin-right:4px;"></i>Pago pendiente</div>`:''}
+                </div>
+              `).join('')}
+          </div>
+        </div>`
+      }).join('')
+    }</div>`
+  } else {
+    if(!lista.length) { cont.innerHTML=emptyState('fa-shopping-cart','Sin pedidos','Crea el primer pedido'); return }
+    cont.innerHTML = `<div class="card" style="overflow:hidden;"><table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="border-bottom:1px solid #1e293b;">
+        ${['Código','Cliente','Total','Estado','Pago','Fecha',''].map(h=>`<th style="text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;padding:12px 16px;">${h}</th>`).join('')}
+      </tr></thead><tbody>
+      ${lista.map(p=>`<tr class="table-row">
+        <td style="padding:12px 16px;font-family:monospace;font-size:11px;color:#818cf8;">${p.codigo}</td>
+        <td style="padding:12px 16px;font-weight:500;color:#fff;">${p.clienteNombre}</td>
+        <td style="padding:12px 16px;font-weight:700;color:#34d399;">${fmtCOP(p.total)}</td>
+        <td style="padding:12px 16px;">${badgeEstado(p.estado)}</td>
+        <td style="padding:12px 16px;">
+          ${p.pagoConfirmado
+            ? `<span class="badge" style="background:rgba(16,185,129,.15);color:#34d399;"><i class="fas fa-check"></i> Confirmado</span>`
+            : `<span class="badge" style="background:#1e293b;color:#64748b;">Pendiente</span>`}
+        </td>
+        <td style="padding:12px 16px;font-size:11px;color:#475569;">${tiempoRelativo(p.creado)}</td>
+        <td style="padding:12px 16px;"><button class="btn-ghost" onclick="abrirDetallePedido('${p.id}')"><i class="fas fa-eye"></i> Ver</button></td>
+      </tr>`).join('')}
+      </tbody></table></div>`
+  }
+}
+
+function abrirDetallePedido(id) {
+  const pedidos = DB.get('pedidos')
+  const p = pedidos.find(x=>x.id===id)
+  if(!p) return
+  const clientes = DB.get('clientes')
+  const cli = clientes.find(c=>c.id===p.clienteId)
+  const productos = DB.get('productos')
+  const trans = TRANSICIONES[p.estado]||[]
+
+  openModal('Pedido '+p.codigo, `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;font-size:13px;">
+      <div><span style="color:#64748b;">Cliente:</span> <span style="color:#fff;font-weight:500;">${cli?.nombre||'?'}</span></div>
+      <div><span style="color:#64748b;">Canal:</span> <span style="color:#fff;capitalize">${p.canal}</span></div>
+      <div><span style="color:#64748b;">Pago:</span> <span style="color:#fff;capitalize">${p.metodoPago}</span></div>
+      <div><span style="color:#64748b;">Estado pago:</span> <span style="color:${p.pagoConfirmado?'#34d399':'#fbbf24'};">${p.pagoConfirmado?'Confirmado':'Pendiente'}</span></div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div class="label" style="margin-bottom:8px;">Productos</div>
+      ${(p.items||[]).map(it=>{
+        const prod = productos.find(pr=>pr.id===it.productoId)
+        return `<div style="display:flex;justify-content:space-between;align-items:center;background:#1e293b;border-radius:12px;padding:10px 14px;margin-bottom:6px;font-size:13px;">
+          <span style="color:#fff;">${prod?.nombre||'?'}</span>
+          <div style="display:flex;gap:16px;color:#94a3b8;">
+            <span>${it.cantidad}×</span>
+            <span style="color:#34d399;font-weight:700;">${fmtCOP(it.subtotal)}</span>
+          </div>
+        </div>`
+      }).join('')}
+      <div style="display:flex;justify-content:space-between;padding:8px 14px;font-size:13px;font-weight:700;">
+        <span style="color:#94a3b8;">Total</span><span style="color:#fff;">${fmtCOP(p.total)}</span>
+      </div>
+    </div>
+    ${trans.length?`
+    <div>
+      <div class="label" style="margin-bottom:8px;">Cambiar estado</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${trans.map(e=>`<button class="btn-secondary" style="${e==='cancelado'?'color:#f87171;border-color:rgba(239,68,68,.3);':''}" onclick="cambiarEstadoPedido('${id}','${e}')">${ESTADO_BADGE[e]?.label||e}</button>`).join('')}
+      </div>
+    </div>`:''}
+    ${!p.pagoConfirmado && p.estado!=='cancelado'?`
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid #1e293b;">
+      <button class="btn-primary" style="width:100%;justify-content:center;" onclick="confirmarPagoPedido('${id}')"><i class="fas fa-check-circle"></i> Confirmar pago</button>
+    </div>`:''}
+  `)
+}
+
+function cambiarEstadoPedido(id, nuevoEstado) {
+  const pedidos = DB.get('pedidos')
+  const idx = pedidos.findIndex(p=>p.id===id)
+  if(idx<0) return
+  const p = pedidos[idx]
+  const trans = TRANSICIONES[p.estado]||[]
+  if(!trans.includes(nuevoEstado)) { showToast('⚠️ Transición no permitida','#f59e0b'); return }
+
+  // Descontar stock si pasa a en_preparacion
+  if(nuevoEstado==='en_preparacion') {
+    const insumos = DB.get('insumos')
+    const productos = DB.get('productos')
+    const productosActualizados = [...productos]
+    const insumosActualizados = [...insumos]
+    for(const item of (p.items||[])) {
+      const prod = productosActualizados.find(pr=>pr.id===item.productoId)
+      if(prod) {
+        prod.stock = Math.max(0, prod.stock - item.cantidad)
+        if(prod.receta) {
+          for(const r of prod.receta) {
+            const ins = insumosActualizados.find(i=>i.id===r.insumoId)
+            if(ins) ins.stock = Math.max(0, ins.stock - r.cant*item.cantidad)
+          }
+        }
+      }
+    }
+    DB.set('productos', productosActualizados)
+    DB.set('insumos', insumosActualizados)
+  }
+
+  // Registrar ingreso si se entrega
+  if(nuevoEstado==='entregado' && !p.pagoConfirmado) {
+    const movs = DB.get('movimientos')
+    movs.push({id:uid(),tipo:'ingreso',categoria:'venta',monto:p.total,descripcion:`Venta ${p.codigo}`,canal:p.metodoPago||'efectivo',fecha:hoy(),pedidoId:p.id})
+    DB.set('movimientos',movs)
+    pedidos[idx].pagoConfirmado = true
+  }
+
+  pedidos[idx].estado = nuevoEstado
+  DB.set('pedidos', pedidos)
+  closeModal()
+  renderPedidos()
+  showToast(`✅ Estado actualizado: ${ESTADO_BADGE[nuevoEstado]?.label}`)
+}
+
+function confirmarPagoPedido(id) {
+  const pedidos = DB.get('pedidos')
+  const idx = pedidos.findIndex(p=>p.id===id)
+  if(idx<0||pedidos[idx].pagoConfirmado) return
+  pedidos[idx].pagoConfirmado = true
+  const movs = DB.get('movimientos')
+  movs.push({id:uid(),tipo:'ingreso',categoria:'venta',monto:pedidos[idx].total,descripcion:`Pago ${pedidos[idx].codigo}`,canal:pedidos[idx].metodoPago||'efectivo',fecha:hoy(),pedidoId:id})
+  DB.set('movimientos',movs)
+  DB.set('pedidos',pedidos)
+  closeModal()
+  renderPedidos()
+  showToast('✅ Pago confirmado y registrado')
+}
+
+function abrirModalNuevoPedido() {
+  const clientes = DB.get('clientes')
+  const productos = DB.get('productos').filter(p=>p.activo)
+  let itemsForm = []
+
+  const renderItems = () => {
+    return itemsForm.map((it,i) => {
+      const prod = productos.find(p=>p.id===it.productoId)
+      return `<div style="display:flex;align-items:center;gap:8px;background:#1e293b;border-radius:12px;padding:8px 12px;margin-bottom:6px;">
+        <span style="flex:1;font-size:13px;color:#fff;">${prod?.nombre||'?'}</span>
+        <input type="number" min="1" value="${it.cantidad}" style="width:64px;background:#0f172a;border:1px solid #334155;color:#fff;border-radius:8px;padding:4px 8px;font-size:13px;text-align:center;" onchange="updateItemNP(${i},this.value)">
+        <span style="color:#34d399;font-size:13px;font-weight:700;min-width:70px;text-align:right;">${fmtCOP((prod?.precio||0)*it.cantidad)}</span>
+        <button onclick="removeItemNP(${i})" style="background:none;border:none;color:#f87171;cursor:pointer;padding:2px;"><i class="fas fa-times"></i></button>
+      </div>`
+    }).join('')
+  }
+
+  window.updateItemNP = (i,v) => { itemsForm[i].cantidad=Math.max(1,parseInt(v)||1); refreshNPForm() }
+  window.removeItemNP = (i) => { itemsForm.splice(i,1); refreshNPForm() }
+  window.addItemNP = () => {
+    const sel = document.getElementById('npProdSel')
+    const id = sel.value; if(!id) return
+    if(itemsForm.find(x=>x.productoId===id)) { showToast('Producto ya agregado','#f59e0b'); return }
+    itemsForm.push({productoId:id,cantidad:1})
+    sel.value=''
+    refreshNPForm()
+  }
+  window.refreshNPForm = () => {
+    const total = itemsForm.reduce((s,it)=>{ const p=productos.find(pr=>pr.id===it.productoId); return s+(p?p.precio*it.cantidad:0) },0)
+    document.getElementById('npItems').innerHTML = renderItems()
+    document.getElementById('npTotal').textContent = fmtCOP(total)
+  }
+  window.guardarNuevoPedido = () => {
+    const clienteId = document.getElementById('npCliente').value
+    const metodoPago = document.getElementById('npMetodo').value
+    const notas = document.getElementById('npNotas').value
+    if(!clienteId) { showToast('⚠️ Selecciona un cliente','#f59e0b'); return }
+    if(!itemsForm.length) { showToast('⚠️ Agrega al menos un producto','#f59e0b'); return }
+    const total = itemsForm.reduce((s,it)=>{ const p=productos.find(pr=>pr.id===it.productoId); return s+(p?p.precio*it.cantidad:0) },0)
+    const nro = String(DB.get('pedidos').length+1).padStart(3,'0')
+    const pedido = {
+      id:uid(), codigo:`PED-${nro}`, clienteId, metodoPago, canal:'manual', notas, total,
+      pagoConfirmado:false, estado:'pendiente', creado:new Date().toISOString(),
+      items: itemsForm.map(it=>{ const p=productos.find(pr=>pr.id===it.productoId); return {productoId:it.productoId,cantidad:it.cantidad,precio:p?.precio||0,subtotal:(p?.precio||0)*it.cantidad} })
+    }
+    const pedidos = DB.get('pedidos'); pedidos.push(pedido); DB.set('pedidos',pedidos)
+    closeModal(); renderPedidos(); showToast('✅ Pedido creado: '+pedido.codigo)
+  }
+
+  openModal('Nuevo pedido', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div>
+        <div class="label">Cliente</div>
+        <select class="input" id="npCliente">
+          <option value="">Seleccionar...</option>
+          ${clientes.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div class="label">Método de pago</div>
+        <select class="input" id="npMetodo">
+          <option value="efectivo">Efectivo</option>
+          <option value="nequi">Nequi</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <div class="label">Agregar producto</div>
+      <div style="display:flex;gap:8px;">
+        <select class="input" id="npProdSel" style="flex:1;">
+          <option value="">Seleccionar producto...</option>
+          ${productos.map(p=>`<option value="${p.id}">${p.nombre} — ${fmtCOP(p.precio)}</option>`).join('')}
+        </select>
+        <button class="btn-secondary" onclick="addItemNP()"><i class="fas fa-plus"></i></button>
+      </div>
+    </div>
+    <div id="npItems" style="margin-bottom:12px;"></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 12px;background:#1e293b;border-radius:12px;margin-bottom:16px;font-size:14px;font-weight:700;">
+      <span style="color:#94a3b8;">Total</span><span style="color:#fff;" id="npTotal">${fmtCOP(0)}</span>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div class="label">Notas (opcional)</div>
+      <textarea class="input" id="npNotas" rows="2" placeholder="Instrucciones de entrega..." style="resize:none;"></textarea>
+    </div>
+    <button class="btn-primary" style="width:100%;justify-content:center;" onclick="guardarNuevoPedido()"><i class="fas fa-check"></i> Crear pedido</button>
+  `, true)
+}
+
+function setModalNuevoPedido() { setTimeout(abrirModalNuevoPedido, 100) }
+
+// ════════════════════════════════════════════════
+//  PRODUCTOS
+// ════════════════════════════════════════════════
+function renderProductos() {
+  const filtro = (document.getElementById('filtroProductos')?.value||'').toLowerCase()
+  let prods = DB.get('productos')
+  if(filtro) prods = prods.filter(p=>p.nombre.toLowerCase().includes(filtro)||p.sku?.toLowerCase().includes(filtro))
+  const grid = document.getElementById('productosGrid')
+  if(!prods.length) { grid.innerHTML = emptyState('fa-cube','Sin productos','Crea el catálogo'); return }
+  grid.innerHTML = prods.map(p=>{
+    const costo = calcularCosto(p)
+    const m = calcularMargen(p)
+    const mc = m<=0?'#ef4444':m<20?'#f59e0b':'#10b981'
+    const barBg = m<=0?'#ef4444':m<20?'#f59e0b':'linear-gradient(90deg,#6366f1,#10b981)'
+    return `<div class="card" style="padding:18px;cursor:pointer;transition:all .2s;" onclick="abrirModalProducto('${p.id}')"
+      onmouseover="this.style.borderColor='rgba(99,102,241,.3)'" onmouseout="this.style.borderColor='rgba(99,102,241,.12)'">
+      <div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-weight:600;color:#fff;font-size:14px;">${p.nombre}</div>
+          ${p.sku?`<div style="font-size:11px;color:#475569;font-family:monospace;margin-top:2px;">${p.sku}</div>`:''}
+        </div>
+        <span class="badge" style="${p.activo?'background:rgba(16,185,129,.15);color:#34d399;':'background:#1e293b;color:#475569;'}">${p.activo?'Activo':'Inactivo'}</span>
+      </div>
+      ${p.categoria?`<div style="font-size:11px;color:#818cf8;margin-bottom:10px;">${p.categoria}</div>`:''}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;text-align:center;">
+        ${[['Precio',fmtCOP(p.precio),'#fff'],['Costo',fmtCOP(costo),'#94a3b8'],['Margen',m.toFixed(1)+'%',mc]].map(([l,v,c])=>`
+          <div style="background:#1e293b;border-radius:10px;padding:8px 4px;">
+            <div style="font-size:10px;color:#475569;margin-bottom:2px;">${l}</div>
+            <div style="font-size:13px;font-weight:700;color:${c};">${v}</div>
+          </div>`).join('')}
+      </div>
+      <div class="progress-bar" style="margin-bottom:10px;"><div class="progress-fill" style="width:${Math.max(0,Math.min(100,m))}%;background:${barBg};"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#475569;">
+        <span>Stock: <strong style="color:${p.stock<=p.stockMin?'#ef4444':'#94a3b8'}">${p.stock} ${p.unidad}</strong></span>
+        ${p.receta?.length?`<span><i class="fas fa-flask" style="margin-right:3px;"></i>${p.receta.length} insumo${p.receta.length>1?'s':''}</span>`:''}
+      </div>
+    </div>`
+  }).join('')
+}
+
+function abrirModalProducto(id) {
+  const insumos = DB.get('insumos')
+  const productos = DB.get('productos')
+  const p = id ? productos.find(x=>x.id===id) : null
+
+  let recetaForm = p ? [...(p.receta||[]).map(r=>({...r}))] : []
+
+  const renderRecetaForm = () => recetaForm.map((r,i)=>{
+    const ins = insumos.find(x=>x.id===r.insumoId)
+    return `<div style="display:flex;align-items:center;gap:8px;background:#1e293b;border-radius:12px;padding:8px 12px;margin-bottom:6px;">
+      <span style="flex:1;font-size:13px;color:#fff;">${ins?.nombre||'?'}</span>
+      <input type="number" min="0.001" step="0.001" value="${r.cant}" style="width:70px;background:#0f172a;border:1px solid #334155;color:#fff;border-radius:8px;padding:4px 8px;font-size:13px;text-align:center;" onchange="updateRecetaItem(${i},this.value)">
+      <span style="font-size:11px;color:#475569;min-width:24px;">${ins?.unidad||''}</span>
+      <button onclick="removeRecetaItem(${i})" style="background:none;border:none;color:#f87171;cursor:pointer;padding:2px;"><i class="fas fa-times"></i></button>
+    </div>`
+  }).join('')
+
+  const calcLive = () => {
+    const precio = parseFloat(document.getElementById('fpPrecio')?.value||0)
+    const costo = recetaForm.reduce((s,r)=>{ const ins=insumos.find(i=>i.id===r.insumoId); return s+(ins?ins.costo*r.cant:0) },0)
+    const m = precio>0?((precio-costo)/precio*100):0
+    const el = document.getElementById('fpMargenLive')
+    if(el) { el.textContent=m.toFixed(1)+'%'; el.style.color=m<=0?'#ef4444':m<20?'#f59e0b':'#10b981' }
+    const ce = document.getElementById('fpCostoLive')
+    if(ce) ce.textContent = fmtCOP(costo)
+  }
+
+  window.updateRecetaItem = (i,v) => { recetaForm[i].cant=parseFloat(v)||0; document.getElementById('recetaFormContainer').innerHTML=renderRecetaForm(); calcLive() }
+  window.removeRecetaItem = (i) => { recetaForm.splice(i,1); document.getElementById('recetaFormContainer').innerHTML=renderRecetaForm(); calcLive() }
+  window.addRecetaItem = () => {
+    const sel = document.getElementById('fpInsSel')
+    const id = sel.value; if(!id) return
+    if(recetaForm.find(r=>r.insumoId===id)) { showToast('Insumo ya en la receta','#f59e0b'); return }
+    recetaForm.push({insumoId:id,cant:1}); sel.value=''
+    document.getElementById('recetaFormContainer').innerHTML=renderRecetaForm(); calcLive()
+  }
+  window.guardarProducto = () => {
+    const nombre = document.getElementById('fpNombre').value.trim()
+    const sku = document.getElementById('fpSku').value.trim()
+    const precio = parseFloat(document.getElementById('fpPrecio').value)||0
+    const stock = parseInt(document.getElementById('fpStock').value)||0
+    const stockMin = parseInt(document.getElementById('fpStockMin').value)||0
+    const unidad = document.getElementById('fpUnidad').value
+    const categoria = document.getElementById('fpCategoria').value
+    const activo = document.getElementById('fpActivo').checked
+    if(!nombre || !precio) { showToast('⚠️ Nombre y precio son requeridos','#f59e0b'); return }
+    const payload = {id:id||uid(),nombre,sku,precio,stock,stockMin,unidad,categoria,activo,receta:recetaForm}
+    const prods = DB.get('productos')
+    const idx = prods.findIndex(x=>x.id===payload.id)
+    if(idx>=0) prods[idx]=payload; else prods.push(payload)
+    DB.set('productos',prods)
+    closeModal(); renderProductos(); showToast(id?'✅ Producto actualizado':'✅ Producto creado')
+  }
+  window.eliminarProducto = () => {
+    if(!confirm('¿Eliminar este producto?')) return
+    const prods = DB.get('productos').filter(x=>x.id!==id)
+    DB.set('productos',prods); closeModal(); renderProductos(); showToast('🗑️ Producto eliminado')
+  }
+
+  openModal((id?'Editar':'Nuevo')+' producto', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div style="grid-column:1/-1;"><div class="label">Nombre *</div><input class="input" id="fpNombre" value="${p?.nombre||''}" placeholder="ej: Jabón de glicerina 100g"></div>
+      <div><div class="label">SKU</div><input class="input" id="fpSku" value="${p?.sku||''}" placeholder="JAB-100G"></div>
+      <div><div class="label">Categoría</div>
+        <select class="input" id="fpCategoria">
+          ${['Jabones','Velas','Baño','Cursos','Otros'].map(c=>`<option ${p?.categoria===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div><div class="label">Precio de venta (COP) *</div><input class="input" type="number" id="fpPrecio" value="${p?.precio||''}" oninput="calcLive()" placeholder="15000"></div>
+      <div><div class="label">Unidad</div>
+        <select class="input" id="fpUnidad">
+          ${['unidad','cupo','g','kg','ml','l'].map(u=>`<option ${p?.unidad===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </div>
+      <div><div class="label">Stock actual</div><input class="input" type="number" id="fpStock" value="${p?.stock??0}"></div>
+      <div><div class="label">Stock mínimo</div><input class="input" type="number" id="fpStockMin" value="${p?.stockMin??0}"></div>
+      <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="fpActivo" ${p?.activo!==false?'checked':''} style="width:16px;height:16px;accent-color:#6366f1;">
+        <label for="fpActivo" style="font-size:13px;color:#94a3b8;cursor:pointer;">Producto activo (visible en catálogo)</label>
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div class="label" style="margin-bottom:8px;">Receta de producción</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <select class="input" id="fpInsSel" style="flex:1;">
+          <option value="">Agregar insumo...</option>
+          ${insumos.map(i=>`<option value="${i.id}">${i.nombre} (${i.unidad}) — ${fmtCOP(i.costo)}/${i.unidad}</option>`).join('')}
+        </select>
+        <button class="btn-secondary" onclick="addRecetaItem()"><i class="fas fa-plus"></i></button>
+      </div>
+      <div id="recetaFormContainer">${renderRecetaForm()}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;text-align:center;">
+        <div style="background:#1e293b;border-radius:10px;padding:8px;"><div style="font-size:10px;color:#475569;">Costo producción</div><div style="font-size:13px;font-weight:700;color:#94a3b8;" id="fpCostoLive">${fmtCOP(calcularCosto(p||{}))}</div></div>
+        <div style="background:#1e293b;border-radius:10px;padding:8px;"><div style="font-size:10px;color:#475569;">Precio venta</div><div style="font-size:13px;font-weight:700;color:#fff;">${fmtCOP(p?.precio||0)}</div></div>
+        <div style="background:#1e293b;border-radius:10px;padding:8px;"><div style="font-size:10px;color:#475569;">Margen</div><div style="font-size:13px;font-weight:700;" id="fpMargenLive">—</div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" style="flex:1;justify-content:center;" onclick="guardarProducto()"><i class="fas fa-check"></i> ${p?'Guardar cambios':'Crear producto'}</button>
+      ${p?`<button class="btn-danger" onclick="eliminarProducto()"><i class="fas fa-trash"></i></button>`:''}
+    </div>
+  `, true)
+  setTimeout(calcLive, 50)
+}
+
+// ════════════════════════════════════════════════
+//  INVENTARIO
+// ════════════════════════════════════════════════
+function renderInventario() {
+  const insumos = DB.get('insumos')
+  const alertas = insumos.filter(i=>i.stock<=i.stockMin)
+
+  const banner = document.getElementById('alertasBanner')
+  banner.innerHTML = alertas.length
+    ? `<span class="badge" style="background:rgba(239,68,68,.15);color:#f87171;font-size:12px;padding:6px 14px;"><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>${alertas.length} alertas de stock bajo</span>`
+    : `<span class="badge" style="background:rgba(16,185,129,.15);color:#34d399;font-size:12px;padding:6px 14px;"><i class="fas fa-check-circle" style="margin-right:6px;"></i>Todo el stock está bien</span>`
+
+  const tabla = document.getElementById('tablaInsumos')
+  tabla.innerHTML = `<thead><tr style="border-bottom:1px solid #1e293b;">
+    ${['Insumo','Stock actual','Stock mín.','Costo unit.','Proveedor','Estado',''].map(h=>`<th style="text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;padding:12px 16px;">${h}</th>`).join('')}
+  </tr></thead><tbody>
+  ${insumos.map(i=>{
+    const alerta = i.stock <= i.stockMin
+    return `<tr class="table-row">
+      <td style="padding:12px 16px;font-weight:500;color:#fff;">${i.nombre}</td>
+      <td style="padding:12px 16px;font-weight:${alerta?'700':'400'};color:${alerta?'#f87171':'#e2e8f0'};">${i.stock} ${i.unidad}</td>
+      <td style="padding:12px 16px;color:#64748b;">${i.stockMin} ${i.unidad}</td>
+      <td style="padding:12px 16px;color:#34d399;">${fmtCOP(i.costo)}/${i.unidad}</td>
+      <td style="padding:12px 16px;color:#64748b;font-size:12px;">${i.proveedor||'—'}</td>
+      <td style="padding:12px 16px;">
+        ${alerta
+          ? `<span class="badge" style="background:rgba(239,68,68,.15);color:#f87171;"><i class="fas fa-exclamation-triangle"></i> Bajo</span>`
+          : `<span class="badge" style="background:rgba(16,185,129,.15);color:#34d399;"><i class="fas fa-check"></i> OK</span>`}
+      </td>
+      <td style="padding:12px 16px;">
+        <button class="btn-ghost" onclick="abrirEntrada('${i.id}')"><i class="fas fa-plus-circle"></i> Entrada</button>
+        <button class="btn-ghost" onclick="editarInsumo('${i.id}')"><i class="fas fa-pen"></i></button>
+      </td>
+    </tr>`
+  }).join('')}
+  </tbody>`
+}
+
+function abrirEntrada(insumoId) {
+  const ins = DB.get('insumos').find(i=>i.id===insumoId)
+  if(!ins) return
+  window.guardarEntrada = () => {
+    const cantidad = parseFloat(document.getElementById('entCant').value)||0
+    const costoTotal = parseFloat(document.getElementById('entCosto').value)||0
+    if(!cantidad||!costoTotal) { showToast('⚠️ Completa los campos','#f59e0b'); return }
+    const insumos = DB.get('insumos')
+    const idx = insumos.findIndex(i=>i.id===insumoId)
+    if(idx<0) return
+    insumos[idx].stock = insumos[idx].stock + cantidad
+    insumos[idx].costo = costoTotal / cantidad
+    DB.set('insumos',insumos)
+    // Registrar egreso
+    const movs = DB.get('movimientos')
+    movs.push({id:uid(),tipo:'egreso',categoria:'compra_insumo',monto:costoTotal,descripcion:`Compra: ${ins.nombre}`,canal:'efectivo',fecha:hoy()})
+    DB.set('movimientos',movs)
+    closeModal(); renderInventario(); showToast('✅ Entrada registrada. Costos actualizados.')
+  }
+  openModal('Entrada: '+ins.nombre, `
+    <div style="margin-bottom:12px;background:rgba(99,102,241,.08);border-radius:12px;padding:12px;font-size:12px;">
+      <span style="color:#94a3b8;">Stock actual: </span><strong style="color:#fff;">${ins.stock} ${ins.unidad}</strong>
+      <span style="color:#94a3b8;margin-left:12px;">Costo unitario: </span><strong style="color:#34d399;">${fmtCOP(ins.costo)}/${ins.unidad}</strong>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div><div class="label">Cantidad (${ins.unidad})</div><input class="input" type="number" min="0.01" step="0.01" id="entCant" placeholder="ej: 500" oninput="
+        const c=parseFloat(this.value)||0, ct=parseFloat(document.getElementById('entCosto').value)||0;
+        document.getElementById('entNuevoCosto').textContent=c&&ct?'Nuevo costo unitario: '+new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(ct/c)+'/'+('${ins.unidad}'):'';
+      "></div>
+      <div><div class="label">Costo total (COP)</div><input class="input" type="number" min="0" id="entCosto" placeholder="ej: 25000" oninput="
+        const c=parseFloat(document.getElementById('entCant').value)||0, ct=parseFloat(this.value)||0;
+        document.getElementById('entNuevoCosto').textContent=c&&ct?'Nuevo costo unitario: '+new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(ct/c)+'/'+('${ins.unidad}'):'';
+      "></div>
+    </div>
+    <div id="entNuevoCosto" style="font-size:12px;color:#34d399;margin-bottom:16px;min-height:18px;"></div>
+    <button class="btn-primary" style="width:100%;justify-content:center;" onclick="guardarEntrada()"><i class="fas fa-check"></i> Registrar entrada</button>
+  `)
+}
+
+function editarInsumo(id) {
+  const ins = DB.get('insumos').find(i=>i.id===id)
+  if(!ins) return
+  window.guardarInsumo = () => {
+    const insumos = DB.get('insumos')
+    const idx = insumos.findIndex(i=>i.id===id)
+    insumos[idx] = {
+      ...insumos[idx],
+      nombre: document.getElementById('inNombre').value,
+      unidad: document.getElementById('inUnidad').value,
+      stock: parseFloat(document.getElementById('inStock').value)||0,
+      stockMin: parseFloat(document.getElementById('inStockMin').value)||0,
+      costo: parseFloat(document.getElementById('inCosto').value)||0,
+      proveedor: document.getElementById('inProveedor').value,
+    }
+    DB.set('insumos',insumos); closeModal(); renderInventario(); showToast('✅ Insumo actualizado')
+  }
+  openModal('Editar insumo', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="grid-column:1/-1;"><div class="label">Nombre</div><input class="input" id="inNombre" value="${ins.nombre}"></div>
+      <div><div class="label">Unidad</div>
+        <select class="input" id="inUnidad">${['g','kg','ml','l','cm','und'].map(u=>`<option ${ins.unidad===u?'selected':''}>${u}</option>`).join('')}</select>
+      </div>
+      <div><div class="label">Costo unitario (COP)</div><input class="input" type="number" id="inCosto" value="${ins.costo}"></div>
+      <div><div class="label">Stock actual</div><input class="input" type="number" id="inStock" value="${ins.stock}"></div>
+      <div><div class="label">Stock mínimo</div><input class="input" type="number" id="inStockMin" value="${ins.stockMin}"></div>
+      <div style="grid-column:1/-1;"><div class="label">Proveedor</div><input class="input" id="inProveedor" value="${ins.proveedor||''}"></div>
+    </div>
+    <button class="btn-primary" style="width:100%;justify-content:center;" onclick="guardarInsumo()"><i class="fas fa-check"></i> Guardar</button>
+  `)
+}
+
+function abrirModalNuevoInsumo() {
+  window.crearInsumo = () => {
+    const nombre = document.getElementById('niNombre').value.trim()
+    if(!nombre) { showToast('⚠️ El nombre es requerido','#f59e0b'); return }
+    const ins = {
+      id: uid(), nombre,
+      unidad: document.getElementById('niUnidad').value,
+      stock: parseFloat(document.getElementById('niStock').value)||0,
+      stockMin: parseFloat(document.getElementById('niStockMin').value)||0,
+      costo: parseFloat(document.getElementById('niCosto').value)||0,
+      proveedor: document.getElementById('niProveedor').value,
+    }
+    const insumos = DB.get('insumos'); insumos.push(ins); DB.set('insumos',insumos)
+    closeModal(); renderInventario(); showToast('✅ Insumo creado')
+  }
+  openModal('Nuevo insumo', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="grid-column:1/-1;"><div class="label">Nombre *</div><input class="input" id="niNombre" placeholder="ej: Base de glicerina"></div>
+      <div><div class="label">Unidad</div><select class="input" id="niUnidad">${['g','kg','ml','l','cm','und'].map(u=>`<option>${u}</option>`).join('')}</select></div>
+      <div><div class="label">Costo unitario (COP)</div><input class="input" type="number" id="niCosto" placeholder="0"></div>
+      <div><div class="label">Stock inicial</div><input class="input" type="number" id="niStock" placeholder="0"></div>
+      <div><div class="label">Stock mínimo</div><input class="input" type="number" id="niStockMin" placeholder="0"></div>
+      <div style="grid-column:1/-1;"><div class="label">Proveedor</div><input class="input" id="niProveedor" placeholder="opcional"></div>
+    </div>
+    <button class="btn-primary" style="width:100%;justify-content:center;" onclick="crearInsumo()"><i class="fas fa-check"></i> Crear insumo</button>
+  `)
+}
+
+// ════════════════════════════════════════════════
+//  FINANCIERO
+// ════════════════════════════════════════════════
+let tabFinanciero = 'resumen'
+let chartFinInstance = null
+
+function setTabFin(tab) {
+  tabFinanciero = tab
+  document.querySelectorAll('.tab-fin').forEach(b => {
+    const isActive = b.id === 'tabFin-'+tab
+    b.style.background = isActive ? '#6366f1' : 'transparent'
+    b.style.color = isActive ? '#fff' : '#94a3b8'
+    b.style.fontWeight = isActive ? '600' : '500'
+  })
+  renderFinanciero()
+}
+
+function renderFinanciero() {
+  const movs = DB.get('movimientos')
+  const mes = hoy().slice(0,7)
+  const movMes = movs.filter(m=>m.fecha&&m.fecha.startsWith(mes))
+  const ingresos = movMes.filter(m=>m.tipo==='ingreso')
+  const egresos = movMes.filter(m=>m.tipo==='egreso')
+  const totalIngresos = ingresos.reduce((s,m)=>s+m.monto,0)
+  const totalEgresos = egresos.reduce((s,m)=>s+m.monto,0)
+  const utilidad = totalIngresos - totalEgresos
+
+  const cont = document.getElementById('finContent')
+
+  if(tabFinanciero==='resumen') {
+    const egresosCat = egresos.reduce((acc,m)=>{acc[m.categoria]=(acc[m.categoria]||0)+m.monto;return acc},{})
+    const ingresosCan = ingresos.reduce((acc,m)=>{acc[m.canal]=(acc[m.canal]||0)+m.monto;return acc},{})
+    cont.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
+        ${[
+          ['fa-arrow-up','linear-gradient(135deg,#10b981,#0d9488)','Ingresos',fmtCOP(totalIngresos)],
+          ['fa-arrow-down','linear-gradient(135deg,#ef4444,#f97316)','Egresos',fmtCOP(totalEgresos)],
+          ['fa-coins',utilidad>=0?'linear-gradient(135deg,#6366f1,#a855f7)':'linear-gradient(135deg,#ef4444,#ec4899)','Utilidad neta',fmtCOP(utilidad)],
+          ['fa-exchange-alt','linear-gradient(135deg,#64748b,#475569)','Movimientos',movMes.length],
+        ].map(([ic,bg,lb,v])=>`<div class="card stat-card" style="padding:16px;">
+          <div style="width:36px;height:36px;background:${bg};border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+            <i class="fas ${ic}" style="color:#fff;font-size:14px;"></i>
+          </div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:3px;">${lb}</div>
+          <div style="font-size:18px;font-weight:700;color:#fff;">${v}</div>
+        </div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card" style="padding:20px;">
+          <div style="font-weight:600;color:#fff;margin-bottom:14px;">Egresos por categoría</div>
+          ${Object.keys(egresosCat).length===0
+            ? `<div style="text-align:center;padding:20px;color:#475569;font-size:12px;">Sin egresos este mes</div>`
+            : Object.entries(egresosCat).map(([cat,monto],i)=>`
+              <div style="margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
+                  <span style="color:#e2e8f0;text-transform:capitalize;">${cat.replace(/_/g,' ')}</span>
+                  <span style="color:#fff;font-weight:600;">${fmtCOP(monto)}</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:${totalEgresos?(monto/totalEgresos*100):0}%;background:${['#6366f1','#a855f7','#ec4899','#f59e0b'][i%4]};"></div></div>
+              </div>`).join('')}
+        </div>
+        <div class="card" style="padding:20px;">
+          <div style="font-weight:600;color:#fff;margin-bottom:14px;">Ingresos por canal de pago</div>
+          ${Object.keys(ingresosCan).length===0
+            ? `<div style="text-align:center;padding:20px;color:#475569;font-size:12px;">Sin ingresos este mes</div>`
+            : Object.entries(ingresosCan).map(([canal,monto])=>`
+              <div style="display:flex;justify-content:space-between;align-items:center;background:#1e293b;border-radius:12px;padding:12px 14px;margin-bottom:8px;">
+                <span style="font-size:13px;color:#fff;text-transform:capitalize;">${canal.replace('_',' ')}</span>
+                <span style="font-size:14px;font-weight:700;color:#34d399;">${fmtCOP(monto)}</span>
+              </div>`).join('')}
+        </div>
+      </div>`
+  }
+
+  if(tabFinanciero==='movimientos') {
+    cont.innerHTML = `
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+        <button class="btn-primary" onclick="abrirModalEgreso()"><i class="fas fa-minus-circle"></i> Registrar egreso</button>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        ${movMes.length===0
+          ? emptyState('fa-list-alt','Sin movimientos este mes')
+          : `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead><tr style="border-bottom:1px solid #1e293b;">
+                ${['Fecha','Tipo','Categoría','Descripción','Canal','Monto'].map(h=>`<th style="text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;padding:12px 16px;">${h}</th>`).join('')}
+              </tr></thead><tbody>
+              ${[...movMes].reverse().map(m=>`<tr class="table-row">
+                <td style="padding:11px 16px;color:#64748b;font-size:12px;">${fmtFecha(m.fecha)}</td>
+                <td style="padding:11px 16px;">
+                  <span class="badge" style="background:${m.tipo==='ingreso'?'rgba(16,185,129,.15)':'rgba(239,68,68,.15)'};color:${m.tipo==='ingreso'?'#34d399':'#f87171'};">
+                    <i class="fas fa-arrow-${m.tipo==='ingreso'?'up':'down'}" style="font-size:9px;"></i> ${m.tipo}
+                  </span>
+                </td>
+                <td style="padding:11px 16px;color:#94a3b8;font-size:12px;text-transform:capitalize;">${(m.categoria||'').replace(/_/g,' ')}</td>
+                <td style="padding:11px 16px;color:#e2e8f0;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.descripcion||'—'}</td>
+                <td style="padding:11px 16px;color:#64748b;font-size:12px;text-transform:capitalize;">${(m.canal||'').replace('_',' ')}</td>
+                <td style="padding:11px 16px;font-weight:700;color:${m.tipo==='ingreso'?'#34d399':'#f87171'};">${m.tipo==='ingreso'?'+':'-'}${fmtCOP(m.monto)}</td>
+              </tr>`).join('')}
+              </tbody></table>`}
+      </div>`
+  }
+
+  if(tabFinanciero==='rentabilidad') {
+    const productos = DB.get('productos').filter(p=>p.activo)
+    const conMargen = productos.map(p=>({...p,costo:calcularCosto(p),margen:calcularMargen(p)})).sort((a,b)=>a.margen-b.margen)
+    const conAlerta = conMargen.filter(p=>p.margen<=0)
+    cont.innerHTML = `
+      ${conAlerta.length?`<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#fca5a5;display:flex;gap:10px;align-items:center;">
+        <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>
+        <strong>${conAlerta.length} producto(s)</strong> se están vendiendo sin margen o a pérdida.
+      </div>`:''}
+      <div class="card" style="overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid #1e293b;">
+            ${['Producto','Precio venta','Costo prod.','Ganancia $','Margen %'].map(h=>`<th style="text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;padding:12px 16px;">${h}</th>`).join('')}
+          </tr></thead><tbody>
+          ${conMargen.map(p=>`<tr class="table-row">
+            <td style="padding:12px 16px;font-weight:500;color:#fff;">${p.nombre}</td>
+            <td style="padding:12px 16px;color:#e2e8f0;">${fmtCOP(p.precio)}</td>
+            <td style="padding:12px 16px;color:#94a3b8;">${fmtCOP(p.costo)}</td>
+            <td style="padding:12px 16px;font-weight:600;color:#34d399;">${fmtCOP(p.precio-p.costo)}</td>
+            <td style="padding:12px 16px;">
+              <span class="badge" style="background:${p.margen<=0?'rgba(239,68,68,.15)':'rgba(16,185,129,.15)'};color:${p.margen<=0?'#f87171':'#34d399'};">
+                ${p.margen.toFixed(1)}%${p.margen<=0?' ⚠️':''}
+              </span>
+            </td>
+          </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`
+  }
+}
+
+function abrirModalEgreso() {
+  window.guardarEgreso = () => {
+    const monto = parseFloat(document.getElementById('egMonto').value)||0
+    if(!monto) { showToast('⚠️ El monto es requerido','#f59e0b'); return }
+    const movs = DB.get('movimientos')
+    movs.push({id:uid(),tipo:'egreso',categoria:document.getElementById('egCat').value,monto,descripcion:document.getElementById('egDesc').value,canal:document.getElementById('egCanal').value,fecha:document.getElementById('egFecha').value||hoy()})
+    DB.set('movimientos',movs); closeModal(); renderFinanciero(); showToast('✅ Egreso registrado')
+  }
+  openModal('Registrar egreso', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div><div class="label">Categoría</div>
+        <select class="input" id="egCat">
+          <option value="gasto_operativo">Gasto operativo</option>
+          <option value="compra_insumo">Compra insumo</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div><div class="label">Monto (COP)</div><input class="input" type="number" id="egMonto" placeholder="ej: 50000"></div>
+      <div style="grid-column:1/-1;"><div class="label">Descripción</div><input class="input" id="egDesc" placeholder="ej: Gas para producción"></div>
+      <div><div class="label">Canal</div>
+        <select class="input" id="egCanal">
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+          <option value="nequi">Nequi</option>
+        </select>
+      </div>
+      <div><div class="label">Fecha</div><input class="input" type="date" id="egFecha" value="${hoy()}"></div>
+    </div>
+    <button class="btn-primary" style="width:100%;justify-content:center;" onclick="guardarEgreso()"><i class="fas fa-save"></i> Guardar egreso</button>
+  `)
+}
+
+// ════════════════════════════════════════════════
+//  CLIENTES
+// ════════════════════════════════════════════════
+function renderClientes() {
+  const filtro = (document.getElementById('filtroClientes')?.value||'').toLowerCase()
+  let clientes = DB.get('clientes')
+  if(filtro) clientes = clientes.filter(c=>c.nombre.toLowerCase().includes(filtro)||c.telefono?.includes(filtro))
+  const tabla = document.getElementById('tablaClientes')
+  if(!clientes.length) { tabla.innerHTML=`<tr><td colspan="6">${emptyState('fa-users','Sin clientes','Agrega el primer cliente')}</td></tr>`; return }
+  tabla.innerHTML = `<thead><tr style="border-bottom:1px solid #1e293b;">
+    ${['Cliente','Teléfono','Email','Dirección','Notas',''].map(h=>`<th style="text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;padding:12px 16px;">${h}</th>`).join('')}
+  </tr></thead><tbody>
+  ${clientes.map(c=>`<tr class="table-row">
+    <td style="padding:12px 16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#a855f7);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0;">${c.nombre.slice(0,2).toUpperCase()}</div>
+        <span style="font-weight:500;color:#fff;">${c.nombre}</span>
+      </div>
+    </td>
+    <td style="padding:12px 16px;color:#e2e8f0;">${c.telefono||'—'}</td>
+    <td style="padding:12px 16px;color:#94a3b8;font-size:12px;">${c.email||'—'}</td>
+    <td style="padding:12px 16px;color:#64748b;font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.direccion||'—'}</td>
+    <td style="padding:12px 16px;color:#64748b;font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.notas||'—'}</td>
+    <td style="padding:12px 16px;">
+      <button class="btn-ghost" onclick="abrirModalCliente('${c.id}')"><i class="fas fa-pen"></i> Editar</button>
+      <button class="btn-ghost" onclick="eliminarCliente('${c.id}')" style="color:#f87171;"><i class="fas fa-trash"></i></button>
+    </td>
+  </tr>`).join('')}
+  </tbody>`
+}
+
+function abrirModalCliente(id) {
+  const c = id ? DB.get('clientes').find(x=>x.id===id) : null
+  window.guardarCliente = () => {
+    const nombre = document.getElementById('cliNombre').value.trim()
+    if(!nombre) { showToast('⚠️ El nombre es requerido','#f59e0b'); return }
+    const payload = { id:id||uid(), nombre, telefono:document.getElementById('cliTel').value, email:document.getElementById('cliEmail').value, direccion:document.getElementById('cliDir').value, notas:document.getElementById('cliNotas').value, creado:c?.creado||hoy() }
+    const clientes = DB.get('clientes')
+    const idx = clientes.findIndex(x=>x.id===payload.id)
+    if(idx>=0) clientes[idx]=payload; else clientes.push(payload)
+    DB.set('clientes',clientes); closeModal(); renderClientes(); showToast(id?'✅ Cliente actualizado':'✅ Cliente creado')
+  }
+  openModal((id?'Editar':'Nuevo')+' cliente', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="grid-column:1/-1;"><div class="label">Nombre *</div><input class="input" id="cliNombre" value="${c?.nombre||''}" placeholder="Nombre o razón social"></div>
+      <div><div class="label">Teléfono</div><input class="input" id="cliTel" value="${c?.telefono||''}" placeholder="3001234567"></div>
+      <div><div class="label">Email</div><input class="input" type="email" id="cliEmail" value="${c?.email||''}" placeholder="correo@ejemplo.com"></div>
+      <div style="grid-column:1/-1;"><div class="label">Dirección</div><input class="input" id="cliDir" value="${c?.direccion||''}" placeholder="Calle 45 #12-30, Bogotá"></div>
+      <div style="grid-column:1/-1;"><div class="label">Notas</div><textarea class="input" id="cliNotas" rows="2" style="resize:none;" placeholder="ej: Cliente mayorista, paga por transferencia">${c?.notas||''}</textarea></div>
+    </div>
+    <button class="btn-primary" style="width:100%;justify-content:center;" onclick="guardarCliente()"><i class="fas fa-check"></i> ${c?'Actualizar':'Crear cliente'}</button>
+  `)
+}
+
+function eliminarCliente(id) {
+  if(!confirm('¿Eliminar este cliente? Los pedidos asociados permanecerán.')) return
+  DB.set('clientes', DB.get('clientes').filter(c=>c.id!==id))
+  renderClientes(); showToast('🗑️ Cliente eliminado')
+}
+
+// ════════════════════════════════════════════════
+//  HELPERS: MODAL, TOAST, EMPTY
+// ════════════════════════════════════════════════
+function openModal(titulo, html, wide=false) {
+  document.getElementById('modalTitle').textContent = titulo
+  document.getElementById('modalBody').innerHTML = html
+  document.getElementById('modalBox').className = 'modal-box' + (wide?' wide':'')
+  document.getElementById('modalOverlay').style.display = 'flex'
+}
+function closeModal() {
+  document.getElementById('modalOverlay').style.display = 'none'
+  document.getElementById('modalBody').innerHTML = ''
+}
+
+let toastTimer
+function showToast(msg, color='#34d399') {
+  const t = document.getElementById('toast')
+  t.innerHTML = `<i class="fas fa-check-circle" style="color:${color};font-size:16px;"></i> ${msg}`
+  t.style.display = 'flex'
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(()=>{ t.style.display='none' }, 3000)
+}
+
+function emptyState(icon, titulo, sub='') {
+  return `<div style="text-align:center;padding:48px 24px;">
+    <div style="width:56px;height:56px;background:#1e293b;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+      <i class="fas ${icon}" style="color:#334155;font-size:22px;"></i>
+    </div>
+    <div style="font-weight:600;color:#94a3b8;margin-bottom:4px;">${titulo}</div>
+    ${sub?`<div style="font-size:12px;color:#475569;">${sub}</div>`:''}
+  </div>`
+}
+
+// ════════════════════════════════════════════════
+//  RESPONSIVE
+// ════════════════════════════════════════════════
+function checkResponsive() {
+  const btn = document.getElementById('menuBtn')
+  if(window.innerWidth < 768) {
+    btn.style.display = 'block'
+    document.getElementById('mainContent').style.marginLeft = '0'
+  } else {
+    btn.style.display = 'none'
+    document.getElementById('mainContent').style.marginLeft = '256px'
+    closeSidebar()
+  }
+}
+window.addEventListener('resize', checkResponsive)
+
+// ════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════
+initData()
+checkResponsive()
+renderDashboard()
+</script>
+</body>
+</html>
