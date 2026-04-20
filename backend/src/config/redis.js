@@ -1,21 +1,17 @@
 const { createClient } = require('redis');
 const logger = require('./logger');
-
 let redisClient;
 
 async function connectRedis() {
-  redisClient = createClient({
-    socket: {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: process.env.REDIS_PORT || 6379,
-    },
-    ...(process.env.REDIS_PASSWORD && { password: process.env.REDIS_PASSWORD }),
-  });
+  // Railway da REDIS_URL, localmente usa host/port
+  const url = process.env.REDIS_URL;
+  redisClient = url
+    ? createClient({ url })
+    : createClient({ socket: { host: process.env.REDIS_HOST || 'localhost', port: process.env.REDIS_PORT || 6379 } });
 
   redisClient.on('error', (err) => logger.error('Redis error:', err));
-
   await redisClient.connect();
-  logger.info('✅ Conexión a Redis establecida');
+  logger.info('✅ Redis conectado');
 }
 
 function getRedis() {
