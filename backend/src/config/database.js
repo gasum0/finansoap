@@ -1,24 +1,23 @@
 const { Sequelize } = require('sequelize');
 const logger = require('./logger');
 
-const sequelize = process.env.DATABASE_URL
-  ? new Sequelize(process.env.DATABASE_URL, {
-      dialect: 'postgres',
-      dialectOptions: {
-        ssl: { require: true, rejectUnauthorized: false },
-      },
-      pool: { max: 3, min: 0, acquire: 30000, idle: 10000 },
-      logging: false,
-    })
-  : new Sequelize(
-      process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD,
-      {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT || 5432,
-        dialect: 'postgres',
-        logging: false,
-      }
-    );
+const sequelize = new Sequelize(
+  process.env.DB_NAME || 'postgres',
+  process.env.DB_USER || 'postgres',
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT) || 5432,
+    dialect: 'postgres',
+    dialectOptions: {
+      ssl: process.env.NODE_ENV === 'production'
+        ? { require: true, rejectUnauthorized: false }
+        : false,
+    },
+    pool: { max: 3, min: 0, acquire: 30000, idle: 10000 },
+    logging: false,
+  }
+);
 
 async function connectDB() {
   try {
