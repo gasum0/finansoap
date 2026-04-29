@@ -6,13 +6,20 @@ const { Producto, Insumo, Receta, AlertaInventario } = require('../models');
  */
 async function descontarStockPorVenta(items, transaction) {
   for (const item of items) {
+    // Lock sin include para evitar error de PostgreSQL con outer joins
     const producto = await Producto.findByPk(item.producto_id, {
-      include: [{ model: Receta, as: 'receta', include: [{ model: Insumo, as: 'insumo' }] }],
       transaction,
       lock: true,
     });
 
     if (!producto) throw new Error(`Producto ${item.producto_id} no encontrado`);
+
+    // Cargar receta con insumos por separado sin lock
+    const receta = await Receta.findAll({
+      where: { producto_id: item.producto_id },
+      include: [{ model: Insumo, as: 'insumo' }],
+      transaction,
+    });
 
     // 1. Descontar stock del producto terminado
     const nuevoStock = producto.stock_actual - item.cantidad;
@@ -22,7 +29,7 @@ async function descontarStockPorVenta(items, transaction) {
     await producto.update({ stock_actual: nuevoStock }, { transaction });
 
     // 2. Descontar insumos según la receta del producto
-    for (const recetaItem of producto.receta) {
+    for (const recetaItem of receta) {
       const insumo = recetaItem.insumo;
       const cantidadUsada = parseFloat(recetaItem.cantidad_por_unidad) * item.cantidad;
       const nuevoStockInsumo = parseFloat(insumo.stock_actual) - cantidadUsada;
@@ -52,16 +59,23 @@ async function descontarStockPorVenta(items, transaction) {
  */
 async function restaurarStockPorVenta(items, transaction) {
   for (const item of items) {
+    // Lock sin include para evitar error de PostgreSQL con outer joins
     const producto = await Producto.findByPk(item.producto_id, {
-      include: [{ model: Receta, as: 'receta', include: [{ model: Insumo, as: 'insumo' }] }],
       transaction,
       lock: true,
     });
     if (!producto) continue;
 
+    // Cargar receta con insumos por separado sin lock
+    const receta = await Receta.findAll({
+      where: { producto_id: item.producto_id },
+      include: [{ model: Insumo, as: 'insumo' }],
+      transaction,
+    });
+
     await producto.update({ stock_actual: producto.stock_actual + item.cantidad }, { transaction });
 
-    for (const recetaItem of producto.receta) {
+    for (const recetaItem of receta) {
       const insumo = recetaItem.insumo;
       const cantidadRestaurada = parseFloat(recetaItem.cantidad_por_unidad) * item.cantidad;
       await insumo.update(
