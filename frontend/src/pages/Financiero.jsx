@@ -41,10 +41,11 @@ export default function Financiero() {
   if (cargando) return <div className="flex justify-center pt-20"><Spinner size="lg" /></div>
 
   const TABS = [
-    { id: 'resumen',       label: 'Resumen',       icon: 'fa-chart-pie' },
-    { id: 'movimientos',   label: 'Movimientos',   icon: 'fa-list-alt' },
-    { id: 'rentabilidad',  label: 'Rentabilidad',  icon: 'fa-percentage' },
-    { id: 'conciliacion',  label: 'Conciliación',  icon: 'fa-balance-scale' },
+    { id: 'resumen',       label: 'Resumen',        icon: 'fa-chart-pie' },
+    { id: 'movimientos',   label: 'Movimientos',    icon: 'fa-list-alt' },
+    { id: 'rentabilidad',  label: 'Rentabilidad',   icon: 'fa-percentage' },
+    { id: 'conciliacion',  label: 'Conciliación',   icon: 'fa-balance-scale' },
+    { id: 'diario',        label: 'Ventas del día', icon: 'fa-calendar-day' },
   ]
 
   const PIE_COLORES = ['#6366f1','#a855f7','#ec4899','#f59e0b','#10b981']
@@ -294,10 +295,125 @@ export default function Financiero() {
         </div>
       )}
 
+      {/* Tab: Ventas del día */}
+      {tab === 'diario' && (
+        <VentasDiarias />
+      )}
+
       {/* Modal egreso manual */}
       <Modal open={modalEgreso} onClose={() => setModalEgreso(false)} titulo="Registrar egreso">
         <EgresoForm onSuccess={() => { setModalEgreso(false); cargar() }} />
       </Modal>
+    </div>
+  )
+}
+
+function VentasDiarias() {
+  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0])
+  const [data, setData] = useState(null)
+  const [cargando, setCargando] = useState(false)
+
+  const cargar = async () => {
+    setCargando(true)
+    try {
+      const { data: r } = await api.get(`/financiero/ventas-diarias?fecha=${fecha}`)
+      setData(r)
+    } catch (e) { console.error(e) }
+    finally { setCargando(false) }
+  }
+
+  useEffect(() => { cargar() }, [fecha])
+
+  return (
+    <div className="space-y-4 animate-fadeUp">
+      <div className="flex items-center gap-3">
+        <input
+          type="date"
+          className="input !w-auto"
+          value={fecha}
+          onChange={e => setFecha(e.target.value)}
+        />
+        <button onClick={cargar} className="btn-secondary">
+          <i className="fas fa-sync" /> Actualizar
+        </button>
+      </div>
+
+      {cargando && <div className="flex justify-center pt-10"><Spinner /></div>}
+
+      {data && !cargando && (
+        <>
+          {/* Resumen del día */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: 'Ventas del día',   valor: data.totalVentas,                          icon: 'fa-shopping-bag', color: 'from-purple-500 to-pink-500'   },
+              { label: 'Total facturado',  valor: formatCOP(data.totalDia),                  icon: 'fa-dollar-sign',  color: 'from-blue-500 to-cyan-500'     },
+              { label: 'Total cobrado',    valor: formatCOP(data.totalPagado),               icon: 'fa-check-circle', color: 'from-emerald-500 to-teal-500'  },
+              { label: 'Por cobrar',       valor: formatCOP(data.totalDia - data.totalPagado), icon: 'fa-clock',      color: 'from-orange-500 to-red-500'    },
+            ].map((s, i) => (
+              <div key={i} className="stat-card">
+                <div className={`w-10 h-10 bg-gradient-to-br ${s.color} rounded-xl flex items-center justify-center mb-3`}>
+                  <i className={`fas ${s.icon} text-white text-sm`} />
+                </div>
+                <p className="text-slate-400 text-xs mb-1">{s.label}</p>
+                <p className="text-xl font-bold text-white">{s.valor}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Por método de pago */}
+          {Object.keys(data.porMetodo).length > 0 && (
+            <div className="card p-5">
+              <p className="font-semibold text-white mb-3">Por método de pago</p>
+              <div className="flex gap-4 flex-wrap">
+                {Object.entries(data.porMetodo).map(([metodo, total]) => (
+                  <div key={metodo} className="bg-slate-800/60 rounded-xl px-4 py-3 text-center">
+                    <p className="text-xs text-slate-500 capitalize mb-1">{metodo}</p>
+                    <p className="text-lg font-bold text-indigo-300">{formatCOP(total)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Lista de ventas */}
+          <div className="card overflow-hidden">
+            {data.ventas.length === 0
+              ? <Empty icon="fa-calendar-day" titulo="Sin ventas este día" />
+              : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-700/60">
+                      {['Código','Cliente','Productos','Total','Pago','Estado'].map(h => (
+                        <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.ventas.map(v => (
+                      <tr key={v.id} className="table-row">
+                        <td className="px-4 py-3 font-mono text-xs text-indigo-300">{v.codigo}</td>
+                        <td className="px-4 py-3 text-white font-medium">{v.cliente?.nombre}</td>
+                        <td className="px-4 py-3 text-slate-400 text-xs">
+                          {v.items?.map(i => `${i.cantidad}× ${i.producto?.nombre}`).join(', ')}
+                        </td>
+                        <td className="px-4 py-3 text-emerald-300 font-bold">{formatCOP(v.total)}</td>
+                        <td className="px-4 py-3">
+                          <span className={`badge ${v.pago_confirmado ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}`}>
+                            {v.pago_confirmado ? 'Pagado' : 'Pendiente'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs text-slate-400 capitalize">{v.estado}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )
+            }
+          </div>
+        </>
+      )}
     </div>
   )
 }

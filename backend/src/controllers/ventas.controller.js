@@ -137,17 +137,23 @@ async function cambiarEstado(req, res) {
   const t = await sequelize.transaction();
   try {
     const { estado, notas } = req.body;
-   const venta = await Venta.findByPk(req.params.id, {
-  transaction: t,
-  lock: true,
-});
 
-// Cargar items por separado sin lock
-venta.items = await ItemVenta.findAll({
-  where: { venta_id: venta.id },
-  transaction: t,
-});
-    if (!venta) { await t.rollback(); return res.status(404).json({ error: 'Venta no encontrada' }); }
+    const venta = await Venta.findByPk(req.params.id, {
+      transaction: t,
+      lock: true,
+    });
+
+    // ✅ null check ANTES de usar venta.id
+    if (!venta) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Venta no encontrada' });
+    }
+
+    // Cargar items por separado sin lock
+    venta.items = await ItemVenta.findAll({
+      where: { venta_id: venta.id },
+      transaction: t,
+    });
 
     const permitidas = TRANSICIONES_VALIDAS[venta.estado] || [];
     if (!permitidas.includes(estado)) {

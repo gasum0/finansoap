@@ -1,4 +1,4 @@
-const { MovimientoFinanciero, Producto, Venta } = require('../models');
+const { MovimientoFinanciero, Producto, Venta, ItemVenta, Cliente } = require('../models');
 const { generarResumenFinanciero } = require('../services/financiero.service');
 const { Op } = require('sequelize');
 
@@ -105,6 +105,7 @@ async function conciliacion(req, res) {
     res.status(500).json({ error: 'Error al generar conciliación' });
   }
 }
+router.get('/ventas-diarias', c.ventasDiarias);
 
 // GET /api/financiero/ventas-resumen — métricas rápidas para el dashboard
 async function ventasResumen(req, res) {
@@ -123,6 +124,58 @@ async function ventasResumen(req, res) {
     res.status(500).json({ error: 'Error al obtener resumen de ventas' });
   }
 }
+// GET /api/financiero/ventas-diarias?fecha=2024-04-21
+async function ventasDiarias(req, res) {
+  try {
+    const { Op, fn, col, literal } = require('sequelize');
+    const { sequelize } = require('../models');
+
+    const fecha = req.query.fecha || new Date().toISOString().split('T')[0];
+
+    // Ventas del día con sus items
+    const ventas = await Venta.findAll({
+      where: {
+        created_at: {
+          [Op.between]: [
+            new Date(fecha + 'T00:00:00'),
+            new Date(fecha + 'T23:59:59'),
+          ],
+        },
+        estado: { [Op.ne]: 'cancelado' },
+      },
+      include: [
+        { model: Cliente, as: 'cliente', attributes: ['nombre'] },
+        {
+          model: ItemVenta, as: 'items',
+          include: [{ model: Producto, as: 'producto', attributes: ['nombre'] }],
+        },
+      ],
+      order: [['created_at', 'DESC']],
+    });
+
+    const totalDia = ventas.reduce((s, v) => s + parseFloat(v.total), 0);
+    const pagadas  = ventas.filter(v => v.pago_confirmado);
+    const totalPagado = pagadas.reduce((s, v) => s + parseFloat(v.total), 0);
+
+    // Agrupar por método de pago
+    const porMetodo = ventas.reduce((acc, v) => {
+      acc[v.metodo_pago] = (acc[v.metodo_pago] || 0) + parseFloat(v.total);
+      return acc;
+    }, {});
+
+    res.json({
+      fecha,
+      totalVentas: ventas.length,
+      totalDia:    Math.round(totalDia * 100) / 100,
+      totalPagado: Math.round(totalPagado * 100) / 100,
+      porMetodo,
+      ventas,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Error al obtener ventas del día' });
+  }
+}
 
 module.exports = {
   listarMovimientos,
@@ -131,4 +184,5 @@ module.exports = {
   rentabilidadProductos,
   conciliacion,
   ventasResumen,
+  ventasDiarias,
 };
