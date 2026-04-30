@@ -42,6 +42,12 @@ export default function Ventas() {
   const [filtroEstado, setFiltroEstado] = useState('')
   const [vista, setVista] = useState('kanban')
 
+  // ─── IDs ocultos persistidos en localStorage ───
+  const [idsOcultos, setIdsOcultos] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ventas_ocultas') || '[]') }
+    catch { return [] }
+  })
+
   const cargar = useCallback(async () => {
     try {
       const { data } = await api.get('/ventas?limit=200')
@@ -61,11 +67,28 @@ export default function Ventas() {
     } catch (e) { alert(e.response?.data?.error || 'Error al cambiar estado') }
   }
 
+  // ─── Limpiar ventas entregadas (solo visual, persiste en localStorage) ───
+  const limpiarEntregadas = () => {
+    const entregadas = ventas.filter(v => v.estado === 'entregado').map(v => v.id)
+    if (!entregadas.length) return
+    const nuevos = [...new Set([...idsOcultos, ...entregadas])]
+    setIdsOcultos(nuevos)
+    localStorage.setItem('ventas_ocultas', JSON.stringify(nuevos))
+  }
+
+  const restaurarEntregadas = () => {
+    setIdsOcultos([])
+    localStorage.removeItem('ventas_ocultas')
+  }
+
   const filtradas = ventas.filter(v => {
     const matchTexto = !filtro || v.cliente?.nombre?.toLowerCase().includes(filtro.toLowerCase()) || v.codigo?.includes(filtro)
     const matchEstado = !filtroEstado || v.estado === filtroEstado
-    return matchTexto && matchEstado
+    const matchOculta = !idsOcultos.includes(v.id)
+    return matchTexto && matchEstado && matchOculta
   })
+
+  const entregadasVisibles = ventas.filter(v => v.estado === 'entregado' && !idsOcultos.includes(v.id)).length
 
   if (cargando) return <div className="flex justify-center pt-20"><Spinner size="lg" /></div>
 
@@ -87,16 +110,32 @@ export default function Ventas() {
               <i className={`fas ${v === 'kanban' ? 'fa-columns' : 'fa-list'} mr-1.5`} />{v === 'kanban' ? 'Kanban' : 'Lista'}
             </button>
           ))}
-          
         </div>
-        {(filtro || filtroEstado) && (
-  <button
-    onClick={() => { setFiltro(''); setFiltroEstado('') }}
-    className="btn-ghost text-xs text-slate-400"
-  >
-    <i className="fas fa-times-circle" /> Limpiar filtros
-  </button>
-)}
+
+        {/* Botones limpiar / restaurar entregadas */}
+        <div className="flex items-center gap-2">
+          {entregadasVisibles > 0 && (
+            <button
+              className="btn-ghost text-xs text-slate-400 hover:text-red-400 transition-colors"
+              onClick={limpiarEntregadas}
+              title="Ocultar ventas entregadas de la vista"
+            >
+              <i className="fas fa-broom mr-1" />
+              Limpiar entregadas ({entregadasVisibles})
+            </button>
+          )}
+          {idsOcultos.length > 0 && (
+            <button
+              className="btn-ghost text-xs text-slate-500 hover:text-slate-300 transition-colors"
+              onClick={restaurarEntregadas}
+              title="Volver a mostrar las ventas entregadas ocultas"
+            >
+              <i className="fas fa-rotate-left mr-1" />
+              Restaurar ({idsOcultos.length})
+            </button>
+          )}
+        </div>
+
         <div className="ml-auto">
           <button className="btn-primary" onClick={() => setModalNueva(true)}>
             <i className="fas fa-plus" /> Nueva venta
