@@ -112,8 +112,7 @@ export default function Ventas() {
           ))}
         </div>
 
-        {/* Botones limpiar / restaurar entregadas */}
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
           {entregadasVisibles > 0 && (
             <button
               className="btn-ghost text-xs text-slate-400 hover:text-red-400 transition-colors"
@@ -134,9 +133,6 @@ export default function Ventas() {
               Restaurar ({idsOcultos.length})
             </button>
           )}
-        </div>
-
-        <div className="ml-auto">
           <button className="btn-primary" onClick={() => setModalNueva(true)}>
             <i className="fas fa-plus" /> Nueva venta
           </button>
