@@ -87,7 +87,16 @@ export default function Ventas() {
               <i className={`fas ${v === 'kanban' ? 'fa-columns' : 'fa-list'} mr-1.5`} />{v === 'kanban' ? 'Kanban' : 'Lista'}
             </button>
           ))}
+          
         </div>
+        {(filtro || filtroEstado) && (
+  <button
+    onClick={() => { setFiltro(''); setFiltroEstado('') }}
+    className="btn-ghost text-xs text-slate-400"
+  >
+    <i className="fas fa-times-circle" /> Limpiar filtros
+  </button>
+)}
         <div className="ml-auto">
           <button className="btn-primary" onClick={() => setModalNueva(true)}>
             <i className="fas fa-plus" /> Nueva venta

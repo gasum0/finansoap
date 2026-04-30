@@ -227,11 +227,26 @@ export default function Inventario() {
                 <div key={cat.id} className="card p-5 flex items-start gap-4"
                   style={{ borderLeft: `3px solid ${cat.color}` }}>
                   <span className="w-4 h-4 rounded-full mt-0.5 flex-shrink-0" style={{ background: cat.color }} />
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold text-white">{cat.nombre}</p>
                     {cat.descripcion && <p className="text-xs text-slate-500 mt-0.5">{cat.descripcion}</p>}
                     <p className="text-xs text-slate-600 mt-1">{count} insumo{count !== 1 ? 's' : ''}</p>
                   </div>
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`¿Eliminar la categoría "${cat.nombre}"?`)) return
+                      try {
+                        await api.delete(`/categorias-inventario/${cat.id}`)
+                        cargar()
+                      } catch (e) {
+                        alert(e.response?.data?.error || 'Error al eliminar')
+                      }
+                    }}
+                    className="text-slate-600 hover:text-red-400 transition-colors p-1 flex-shrink-0"
+                    title="Eliminar categoría"
+                  >
+                    <i className="fas fa-trash text-xs" />
+                  </button>
                 </div>
               )
             })}
@@ -403,7 +418,6 @@ function NuevoPedidoProveedorForm({ insumos, onSuccess }) {
   const [guardando, setGuardando] = useState(false)
 
   useEffect(() => {
-    // Extraer proveedores únicos de los insumos
     const provs = [...new Map(insumos.filter(i => i.proveedor).map(i => [i.proveedor.id, i.proveedor])).values()]
     setProveedores(provs)
   }, [insumos])
