@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useState } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import SplashScreen from './components/SplashScreen'
 
 import Layout from './components/layout/Layout'
 import Login from './pages/Login'
@@ -16,7 +18,7 @@ function RutaProtegida({ children }) {
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
       <div className="text-center">
         <div className="w-12 h-12 border-2 border-slate-700 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-slate-500 text-sm">Cargando FinanSoap...</p>
+        <p className="text-slate-500 text-sm">Cargando...</p>
       </div>
     </div>
   )
@@ -25,23 +27,30 @@ function RutaProtegida({ children }) {
 }
 
 function App() {
+  const [splashListo, setSplashListo] = useState(false)
+
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<RutaProtegida><Layout /></RutaProtegida>}>
-            <Route index element={<Dashboard />} />
-            <Route path="ventas" element={<Ventas />} />
-            <Route path="productos" element={<Productos />} />
-            <Route path="inventario" element={<Inventario />} />
-            <Route path="financiero" element={<Financiero />} />
-            <Route path="clientes" element={<Clientes />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <>
+      {!splashListo && <SplashScreen onFinish={() => setSplashListo(true)} />}
+      <div style={{ opacity: splashListo ? 1 : 0, transition: 'opacity 0.4s ease' }}>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<RutaProtegida><Layout /></RutaProtegida>}>
+                <Route index element={<Dashboard />} />
+                <Route path="ventas" element={<Ventas />} />
+                <Route path="productos" element={<Productos />} />
+                <Route path="inventario" element={<Inventario />} />
+                <Route path="financiero" element={<Financiero />} />
+                <Route path="clientes" element={<Clientes />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </div>
+    </>
   )
 }
 
