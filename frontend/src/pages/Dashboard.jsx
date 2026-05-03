@@ -53,7 +53,7 @@ export default function Dashboard() {
     try {
       const res = await api.post('/insumos/revisar-stock')
       console.log(res.data.mensaje)
-      await cargar() // recargar datos para que las alertas aparezcan
+      await cargar()
     } catch (e) {
       console.error('Error al revisar stock:', e)
     } finally {
@@ -69,14 +69,12 @@ export default function Dashboard() {
 
   const { ventasRecientes = [], alertas = [], productos = [], resumen = {} } = data || {}
 
-  // Ventas activas (confirmado + elaboracion + enviado)
   const ventasActivas = ventasRecientes.filter(v =>
     ['confirmado', 'elaboracion', 'enviado'].includes(v.estado)
   ).length
 
   const productosConAlerta = productos.filter(p => p.alerta_margen).length
 
-  // Mini-gráfico distribuido por días estimados del mes
   const totalIng = resumen.totalIngresos || 0
   const grafData = [
     { dia: 'L', v: totalIng * 0.12 },
@@ -188,7 +186,7 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Alertas de inventario */}
+        {/* Alertas de stock */}
         <div className="card p-5 animate-fadeUp" style={{ animationDelay: '250ms' }}>
           <div className="flex items-center justify-between mb-4">
             <p className="font-semibold text-white">Alertas de stock</p>
@@ -202,18 +200,47 @@ export default function Dashboard() {
               <p className="text-sm text-slate-500">Todo el stock está bien</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {alertas.slice(0, 5).map(a => (
-                <div key={a.id} className="flex items-start gap-2.5 p-2.5 bg-red-500/5 border border-red-500/15 rounded-xl">
-                  <i className="fas fa-exclamation-triangle text-red-400 text-xs mt-0.5 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-white truncate">{a.nombre_item}</p>
-                    <p className="text-[11px] text-slate-500">
-                      Stock: {a.stock_actual} (mín: {a.stock_minimo})
-                    </p>
-                  </div>
+            <div className="space-y-3">
+              {/* Alertas de productos */}
+              {alertas.filter(a => a.tipo_item === 'producto').length > 0 && (
+                <div>
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                    <i className="fas fa-cube mr-1" /> Productos terminados
+                  </p>
+                  {alertas.filter(a => a.tipo_item === 'producto').map(a => (
+                    <div key={a.id} className="flex items-start gap-2.5 p-2.5 bg-red-500/5 border border-red-500/15 rounded-xl mb-1.5">
+                      <i className="fas fa-exclamation-triangle text-red-400 text-xs mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-white truncate">{a.nombre_item}</p>
+                        <p className="text-[11px] text-slate-500">
+                          Stock: {a.stock_actual} (mín: {a.stock_minimo})
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {/* Alertas de insumos */}
+              {alertas.filter(a => a.tipo_item === 'insumo').length > 0 && (
+                <div>
+                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                    <i className="fas fa-flask mr-1" /> Materia prima
+                  </p>
+                  {alertas.filter(a => a.tipo_item === 'insumo').map(a => (
+                    <div key={a.id} className="flex items-start gap-2.5 p-2.5 bg-amber-500/5 border border-amber-500/15 rounded-xl mb-1.5">
+                      <i className="fas fa-exclamation-triangle text-amber-400 text-xs mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-white truncate">{a.nombre_item}</p>
+                        <p className="text-[11px] text-slate-500">
+                          Stock: {a.stock_actual} (mín: {a.stock_minimo})
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <button onClick={() => navigate('/inventario')} className="btn-ghost text-xs w-full justify-center mt-1">
                 Ver inventario →
               </button>

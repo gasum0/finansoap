@@ -16,51 +16,56 @@ router.patch('/alertas/:id/resolver', soloAdmin, c.resolverAlerta);
 // Revisa todos los insumos y crea alertas donde el stock esté bajo
 router.post('/revisar-stock', async (req, res) => {
   try {
-    const { Insumo, AlertaInventario } = require('../models');
-    const insumos = await Insumo.findAll({ where: { activo: true } });
+    const { Insumo, Producto, AlertaInventario } = require('../models');
     let creadas = 0;
+    let resueltas = 0;
 
+    // ── Insumos ──
+    const insumos = await Insumo.findAll({ where: { activo: true } });
     for (const ins of insumos) {
-      if (parseFloat(ins.stock_actual) <= parseFloat(ins.stock_minimo)) {
-        const yaExiste = await AlertaInventario.findOne({
-          where: { tipo_item: 'insumo', item_id: ins.id, resuelta: false }
+      const stockBajo = parseFloat(ins.stock_actual) < parseFloat(ins.stock_minimo);
+      const alerta = await AlertaInventario.findOne({
+        where: { tipo_item: 'insumo', item_id: ins.id, resuelta: false }
+      });
+
+      if (stockBajo && !alerta) {
+        await AlertaInventario.create({
+          tipo_item: 'insumo', item_id: ins.id,
+          nombre_item: ins.nombre,
+          stock_actual: ins.stock_actual,
+          stock_minimo: ins.stock_minimo,
         });
-        if (!yaExiste) {
-          await AlertaInventario.create({
-            tipo_item: 'insumo',
-            item_id: ins.id,
-            nombre_item: ins.nombre,
-            stock_actual: ins.stock_actual,
-            stock_minimo: ins.stock_minimo,
-          });
-          creadas++;
-        }
+        creadas++;
+      } else if (!stockBajo && alerta) {
+        // Stock ya está bien, resolver la alerta
+        await alerta.update({ resuelta: true });
+        resueltas++;
       }
     }
 
-    // Igual para productos
-    const { Producto } = require('../models');
+    // ── Productos terminados ──
     const productos = await Producto.findAll({ where: { activo: true } });
-
     for (const prod of productos) {
-      if (prod.stock_actual <= prod.stock_minimo) {
-        const yaExiste = await AlertaInventario.findOne({
-          where: { tipo_item: 'producto', item_id: prod.id, resuelta: false }
+      const stockBajo = prod.stock_actual < prod.stock_minimo;
+      const alerta = await AlertaInventario.findOne({
+        where: { tipo_item: 'producto', item_id: prod.id, resuelta: false }
+      });
+
+      if (stockBajo && !alerta) {
+        await AlertaInventario.create({
+          tipo_item: 'producto', item_id: prod.id,
+          nombre_item: prod.nombre,
+          stock_actual: prod.stock_actual,
+          stock_minimo: prod.stock_minimo,
         });
-        if (!yaExiste) {
-          await AlertaInventario.create({
-            tipo_item: 'producto',
-            item_id: prod.id,
-            nombre_item: prod.nombre,
-            stock_actual: prod.stock_actual,
-            stock_minimo: prod.stock_minimo,
-          });
-          creadas++;
-        }
+        creadas++;
+      } else if (!stockBajo && alerta) {
+        await alerta.update({ resuelta: true });
+        resueltas++;
       }
     }
 
-    res.json({ mensaje: `Revisión completada. ${creadas} alertas nuevas creadas.`, creadas });
+    res.json({ mensaje: `${creadas} alertas creadas, ${resueltas} resueltas.`, creadas, resueltas });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
