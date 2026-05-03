@@ -37,7 +37,6 @@ router.post('/revisar-stock', async (req, res) => {
         });
         creadas++;
       } else if (!stockBajo && alerta) {
-        // Stock ya está bien, resolver la alerta
         await alerta.update({ resuelta: true });
         resueltas++;
       }
@@ -68,6 +67,20 @@ router.post('/revisar-stock', async (req, res) => {
     res.json({ mensaje: `${creadas} alertas creadas, ${resueltas} resueltas.`, creadas, resueltas });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+router.delete('/:id', soloAdmin, async (req, res) => {
+  try {
+    const { Insumo, Receta } = require('../models');
+    const insumo = await Insumo.findByPk(req.params.id);
+    if (!insumo) return res.status(404).json({ error: 'Insumo no encontrado' });
+    const enUso = await Receta.findOne({ where: { insumo_id: insumo.id } });
+    if (enUso) return res.status(400).json({ error: 'No se puede eliminar, está en uso en una receta de producto' });
+    await insumo.destroy();
+    res.json({ mensaje: 'Insumo eliminado' });
+  } catch (e) {
+    res.status(500).json({ error: 'Error al eliminar el insumo' });
   }
 });
 
