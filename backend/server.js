@@ -55,6 +55,25 @@ const PORT = process.env.PORT || 3001;
 async function start() {
   try {
     await connectDB();
+
+    // Revisar stock al arrancar
+    const { Insumo, Producto, AlertaInventario } = require('./src/models');
+    const insumos = await Insumo.findAll({ where: { activo: true } });
+    for (const ins of insumos) {
+      if (parseFloat(ins.stock_actual) <= parseFloat(ins.stock_minimo)) {
+        const ya = await AlertaInventario.findOne({ where: { tipo_item: 'insumo', item_id: ins.id, resuelta: false } });
+        if (!ya) await AlertaInventario.create({ tipo_item: 'insumo', item_id: ins.id, nombre_item: ins.nombre, stock_actual: ins.stock_actual, stock_minimo: ins.stock_minimo });
+      }
+    }
+    const productos = await Producto.findAll({ where: { activo: true } });
+    for (const prod of productos) {
+      if (prod.stock_actual <= prod.stock_minimo) {
+        const ya = await AlertaInventario.findOne({ where: { tipo_item: 'producto', item_id: prod.id, resuelta: false } });
+        if (!ya) await AlertaInventario.create({ tipo_item: 'producto', item_id: prod.id, nombre_item: prod.nombre, stock_actual: prod.stock_actual, stock_minimo: prod.stock_minimo });
+      }
+    }
+    logger.info('✅ Revisión de stock completada');
+
     await connectRedis();
     httpServer.listen(PORT, () => logger.info(`✅ FinanSoap backend en puerto ${PORT}`));
   } catch (e) { logger.error('Error al iniciar:', e); process.exit(1); }
