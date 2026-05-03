@@ -19,6 +19,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [cargando, setCargando] = useState(true)
+  const [revisando, setRevisando] = useState(false)
 
   useEffect(() => { cargar() }, [])
 
@@ -44,6 +45,19 @@ export default function Dashboard() {
       console.error(e)
     } finally {
       setCargando(false)
+    }
+  }
+
+  async function forzarRevisionStock() {
+    setRevisando(true)
+    try {
+      const res = await api.post('/insumos/revisar-stock')
+      console.log(res.data.mensaje)
+      await cargar() // recargar datos para que las alertas aparezcan
+    } catch (e) {
+      console.error('Error al revisar stock:', e)
+    } finally {
+      setRevisando(false)
     }
   }
 
@@ -78,13 +92,24 @@ export default function Dashboard() {
     <div className="space-y-6">
 
       {/* Saludo */}
-      <div className="animate-fadeUp">
-        <h2 className="text-xl font-bold text-white">
-          ¡Hola, {usuario?.nombre?.split(' ')[0]}! 👋
-        </h2>
-        <p className="text-slate-500 text-sm mt-0.5">
-          Resumen de {new Date().toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
-        </p>
+      <div className="animate-fadeUp flex items-start justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-white">
+            ¡Hola, {usuario?.nombre?.split(' ')[0]}! 👋
+          </h2>
+          <p className="text-slate-500 text-sm mt-0.5">
+            Resumen de {new Date().toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
+          </p>
+        </div>
+        <button
+          onClick={forzarRevisionStock}
+          disabled={revisando}
+          className="btn-ghost text-xs flex items-center gap-1.5 mt-1"
+          title="Revisar stock y crear alertas"
+        >
+          <i className={`fas fa-sync-alt text-[11px] ${revisando ? 'animate-spin' : ''}`} />
+          {revisando ? 'Revisando...' : 'Revisar stock'}
+        </button>
       </div>
 
       {/* Stats */}
