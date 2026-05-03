@@ -20,7 +20,6 @@ export default function Productos() {
       ])
       setProductos(p.data.productos)
       setInsumos(i.data.insumos)
-      // Extraer categorías únicas
       const cats = [...new Map(p.data.productos.filter(pr => pr.categoria).map(pr => [pr.categoria.id, pr.categoria])).values()]
       setCategorias(cats)
     } catch (e) { console.error(e) }
@@ -28,6 +27,16 @@ export default function Productos() {
   }
 
   useEffect(() => { cargar() }, [])
+
+  const eliminarProducto = async (producto) => {
+    if (!confirm(`¿Eliminar "${producto.nombre}"? Esta acción no se puede deshacer.`)) return
+    try {
+      await api.delete(`/productos/${producto.id}`)
+      cargar()
+    } catch (e) {
+      alert(e.response?.data?.error || 'Error al eliminar')
+    }
+  }
 
   const filtrados = productos.filter(p =>
     !filtro || p.nombre.toLowerCase().includes(filtro.toLowerCase()) || p.sku?.toLowerCase().includes(filtro.toLowerCase())
@@ -46,13 +55,12 @@ export default function Productos() {
         </div>
       </div>
 
-      {/* Tarjetas de productos */}
       {filtrados.length === 0
         ? <Empty icon="fa-cube" titulo="Sin productos" sub="Crea el catálogo de productos de Rosasenjabonarte" accion={<button className="btn-primary" onClick={() => setModalNuevo(true)}><i className="fas fa-plus" /> Agregar producto</button>} />
         : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 stagger">
             {filtrados.map(p => (
-              <ProductoCard key={p.id} producto={p} onClick={() => setSeleccionado(p)} />
+              <ProductoCard key={p.id} producto={p} onClick={() => setSeleccionado(p)} onEliminar={eliminarProducto} />
             ))}
           </div>
         )
@@ -75,70 +83,73 @@ export default function Productos() {
   )
 }
 
-function ProductoCard({ producto: p, onClick }) {
+function ProductoCard({ producto: p, onClick, onEliminar }) {
   const margen = Number(p.margen)
   const margenColor = margen <= 0 ? 'text-red-400' : margen < 20 ? 'text-amber-400' : 'text-emerald-400'
   const barColor = margen <= 0 ? 'bg-red-500' : margen < 20 ? 'bg-amber-500' : 'bg-gradient-to-r from-indigo-500 to-emerald-500'
 
   return (
-    <button onClick={onClick} className="card p-5 text-left hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-200 active:scale-[0.99] group">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div>
-          <p className="font-semibold text-white group-hover:text-indigo-200 transition-colors">{p.nombre}</p>
-          {p.sku && <p className="text-xs text-slate-500 font-mono mt-0.5">{p.sku}</p>}
-        </div>
-        <span className={`badge flex-shrink-0 ${p.activo ? 'bg-emerald-500/15 text-emerald-400' : 'bg-slate-700 text-slate-500'}`}>
-          {p.activo ? 'Activo' : 'Inactivo'}
-        </span>
-      </div>
+    <div className="card p-5 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-200 group relative">
+      {/* Botón eliminar */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onEliminar(p) }}
+        className="absolute top-3 right-3 text-slate-600 hover:text-red-400 transition-colors p-1 opacity-0 group-hover:opacity-100"
+        title="Eliminar producto"
+      >
+        <i className="fas fa-trash text-xs" />
+      </button>
 
-      {/* Categoría */}
-      {p.categoria && (
-        <p className="text-xs text-indigo-400 mb-3">{p.categoria.nombre}</p>
-      )}
-
-      {/* Precios */}
-      <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-        <div className="bg-slate-800/60 rounded-lg py-2">
-          <p className="text-[10px] text-slate-500 mb-0.5">Precio</p>
-          <p className="text-sm font-bold text-white">{formatCOP(p.precio_venta)}</p>
+      <button onClick={onClick} className="w-full text-left">
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div>
+            <p className="font-semibold text-white group-hover:text-indigo-200 transition-colors">{p.nombre}</p>
+            {p.sku && <p className="text-xs text-slate-500 font-mono mt-0.5">{p.sku}</p>}
+          </div>
+          <span className={`badge flex-shrink-0 ${p.activo ? 'bg-emerald-500/15 text-emerald-400' : 'bg-slate-700 text-slate-500'}`}>
+            {p.activo ? 'Activo' : 'Inactivo'}
+          </span>
         </div>
-        <div className="bg-slate-800/60 rounded-lg py-2">
-          <p className="text-[10px] text-slate-500 mb-0.5">Costo</p>
-          <p className="text-sm font-bold text-slate-300">{formatCOP(p.costo_produccion)}</p>
-        </div>
-        <div className="bg-slate-800/60 rounded-lg py-2">
-          <p className="text-[10px] text-slate-500 mb-0.5">Margen</p>
-          <p className={`text-sm font-bold ${margenColor}`}>{margen.toFixed(1)}%</p>
-        </div>
-      </div>
 
-      {/* Barra de margen */}
-      <div className="h-1 bg-slate-700 rounded-full overflow-hidden mb-3">
-        <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${Math.max(0, Math.min(100, margen))}%` }} />
-      </div>
+        {p.categoria && <p className="text-xs text-indigo-400 mb-3">{p.categoria.nombre}</p>}
 
-      {/* Stock */}
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-500">Stock: <span className={p.stock_actual <= p.stock_minimo ? 'text-red-400 font-bold' : 'text-slate-300'}>{p.stock_actual} {p.unidad}</span></span>
+        <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+          <div className="bg-slate-800/60 rounded-lg py-2">
+            <p className="text-[10px] text-slate-500 mb-0.5">Precio</p>
+            <p className="text-sm font-bold text-white">{formatCOP(p.precio_venta)}</p>
+          </div>
+          <div className="bg-slate-800/60 rounded-lg py-2">
+            <p className="text-[10px] text-slate-500 mb-0.5">Costo</p>
+            <p className="text-sm font-bold text-slate-300">{formatCOP(p.costo_produccion)}</p>
+          </div>
+          <div className="bg-slate-800/60 rounded-lg py-2">
+            <p className="text-[10px] text-slate-500 mb-0.5">Margen</p>
+            <p className={`text-sm font-bold ${margenColor}`}>{margen.toFixed(1)}%</p>
+          </div>
+        </div>
+
+        <div className="h-1 bg-slate-700 rounded-full overflow-hidden mb-3">
+          <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${Math.max(0, Math.min(100, margen))}%` }} />
+        </div>
+
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-500">Stock: <span className={p.stock_actual <= p.stock_minimo ? 'text-red-400 font-bold' : 'text-slate-300'}>{p.stock_actual} {p.unidad}</span></span>
+          {p.receta?.length > 0 && (
+            <span className="text-slate-600"><i className="fas fa-flask mr-1" />{p.receta.length} insumo{p.receta.length > 1 ? 's' : ''}</span>
+          )}
+        </div>
+
         {p.receta?.length > 0 && (
-          <span className="text-slate-600"><i className="fas fa-flask mr-1" />{p.receta.length} insumo{p.receta.length > 1 ? 's' : ''}</span>
+          <div className="mt-3 pt-3 border-t border-slate-700/50 flex flex-wrap gap-1">
+            {p.receta.slice(0, 3).map(r => (
+              <span key={r.id} className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">
+                {r.insumo?.nombre?.split(' ').slice(0,2).join(' ')} ×{r.cantidad_por_unidad}{r.insumo?.unidad}
+              </span>
+            ))}
+            {p.receta.length > 3 && <span className="text-[10px] text-slate-600">+{p.receta.length - 3}</span>}
+          </div>
         )}
-      </div>
-
-      {/* Receta compacta */}
-      {p.receta?.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-slate-700/50 flex flex-wrap gap-1">
-          {p.receta.slice(0, 3).map(r => (
-            <span key={r.id} className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">
-              {r.insumo?.nombre?.split(' ').slice(0,2).join(' ')} ×{r.cantidad_por_unidad}{r.insumo?.unidad}
-            </span>
-          ))}
-          {p.receta.length > 3 && <span className="text-[10px] text-slate-600">+{p.receta.length - 3}</span>}
-        </div>
-      )}
-    </button>
+      </button>
+    </div>
   )
 }
 
@@ -170,7 +181,6 @@ function ProductoForm({ inicial, insumos, onSuccess }) {
     setForm(f => ({ ...f, receta: f.receta.filter(r => r.insumo_id !== insumo_id) }))
   }
 
-  // Cálculo en vivo del costo de producción
   const costoCalculado = form.receta.reduce((total, r) => {
     const ins = insumos.find(i => i.id === r.insumo_id)
     return total + (ins ? ins.costo_unitario * parseFloat(r.cantidad_por_unidad || 0) : 0)
@@ -261,7 +271,6 @@ function ProductoForm({ inicial, insumos, onSuccess }) {
               )
             })}
 
-            {/* Resumen de costos en vivo */}
             <div className="bg-slate-800/40 rounded-xl px-4 py-3 grid grid-cols-3 gap-3 text-center mt-2">
               <div>
                 <p className="text-[10px] text-slate-500 mb-0.5">Costo producción</p>

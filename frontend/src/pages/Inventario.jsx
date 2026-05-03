@@ -52,7 +52,6 @@ export default function Inventario() {
 
   const insumosFiltrados = insumos.filter(i => !catFiltro || i.categoria_id === catFiltro)
 
-  // Agrupar insumos por categoría
   const porCategoria = insumosFiltrados.reduce((acc, ins) => {
     const key = ins.categoria?.nombre || 'Sin categoría'
     const color = ins.categoria?.color || '#6366f1'
@@ -64,14 +63,13 @@ export default function Inventario() {
   if (cargando) return <div className="flex justify-center pt-20"><Spinner size="lg" /></div>
 
   const TABS = [
-    { id: 'insumos',   label: 'Insumos',              icon: 'fa-flask' },
-    { id: 'pedidos',   label: 'Pedidos a proveedor',   icon: 'fa-truck' },
-    { id: 'categorias',label: 'Categorías',             icon: 'fa-tags' },
+    { id: 'insumos',    label: 'Insumos',             icon: 'fa-flask' },
+    { id: 'pedidos',    label: 'Pedidos a proveedor',  icon: 'fa-truck' },
+    { id: 'categorias', label: 'Categorías',            icon: 'fa-tags'  },
   ]
 
   return (
     <div className="space-y-5">
-      {/* Alertas */}
       {alertas.length > 0 && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-5 py-3 flex items-center gap-3">
           <i className="fas fa-exclamation-triangle text-red-400" />
@@ -81,7 +79,6 @@ export default function Inventario() {
         </div>
       )}
 
-      {/* Tabs */}
       <div className="flex gap-1 bg-slate-800/60 rounded-xl p-1 w-fit">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
@@ -111,7 +108,6 @@ export default function Inventario() {
             ? <Empty icon="fa-flask" titulo="Sin insumos" sub="Agrega insumos para comenzar" />
             : Object.entries(porCategoria).map(([catNombre, { color, items }]) => (
               <div key={catNombre} className="card overflow-hidden">
-                {/* Header categoría */}
                 <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-700/60"
                   style={{ borderLeft: `3px solid ${color}` }}>
                   <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
@@ -148,9 +144,26 @@ export default function Inventario() {
                             }
                           </td>
                           <td className="px-4 py-3">
-                            <button className="btn-ghost text-xs" onClick={() => setModalEntrada(ins)}>
-                              <i className="fas fa-plus-circle" /> Entrada
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button className="btn-ghost text-xs" onClick={() => setModalEntrada(ins)}>
+                                <i className="fas fa-plus-circle" /> Entrada
+                              </button>
+                              <button
+                                className="text-slate-600 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-500/10"
+                                title="Eliminar insumo"
+                                onClick={async () => {
+                                  if (!confirm(`¿Eliminar "${ins.nombre}"?`)) return
+                                  try {
+                                    await api.delete(`/insumos/${ins.id}`)
+                                    cargar()
+                                  } catch (e) {
+                                    alert(e.response?.data?.error || 'No se puede eliminar, puede estar en uso')
+                                  }
+                                }}
+                              >
+                                <i className="fas fa-trash text-xs" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       )
@@ -278,8 +291,6 @@ export default function Inventario() {
     </div>
   )
 }
-
-// ─── Sub-formularios ───
 
 function EntradaForm({ insumo, onSuccess }) {
   const [form, setForm] = useState({ cantidad: '', costo_total: '', notas: '' })
