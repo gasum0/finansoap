@@ -42,9 +42,13 @@ export default function Ventas() {
   const [filtroEstado, setFiltroEstado] = useState('')
   const [vista, setVista] = useState('kanban')
 
-  // ─── IDs ocultos persistidos en localStorage ───
+  // ─── Ocultos: solo se guarda el último lote limpiado ───
   const [idsOcultos, setIdsOcultos] = useState(() => {
     try { return JSON.parse(localStorage.getItem('ventas_ocultas') || '[]') }
+    catch { return [] }
+  })
+  const [ultimoLote, setUltimoLote] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ventas_ultimo_lote') || '[]') }
     catch { return [] }
   })
 
@@ -67,18 +71,22 @@ export default function Ventas() {
     } catch (e) { alert(e.response?.data?.error || 'Error al cambiar estado') }
   }
 
-  // ─── Limpiar ventas entregadas (solo visual, persiste en localStorage) ───
+  // ─── Limpiar: reemplaza el lote anterior, solo guarda el último ───
   const limpiarEntregadas = () => {
     const entregadas = ventas.filter(v => v.estado === 'entregado').map(v => v.id)
     if (!entregadas.length) return
-    const nuevos = [...new Set([...idsOcultos, ...entregadas])]
-    setIdsOcultos(nuevos)
-    localStorage.setItem('ventas_ocultas', JSON.stringify(nuevos))
+    setUltimoLote(entregadas)
+    setIdsOcultos(entregadas)
+    localStorage.setItem('ventas_ultimo_lote', JSON.stringify(entregadas))
+    localStorage.setItem('ventas_ocultas', JSON.stringify(entregadas))
   }
 
+  // ─── Restaurar: solo deshace el último limpiar ───
   const restaurarEntregadas = () => {
     setIdsOcultos([])
+    setUltimoLote([])
     localStorage.removeItem('ventas_ocultas')
+    localStorage.removeItem('ventas_ultimo_lote')
   }
 
   const filtradas = ventas.filter(v => {
@@ -93,11 +101,20 @@ export default function Ventas() {
   if (cargando) return <div className="flex justify-center pt-20"><Spinner size="lg" /></div>
 
   return (
-    <div className="space-y-4">
+    <div className="w-full space-y-4">
       {/* Barra de herramientas */}
       <div className="flex flex-wrap items-center gap-3">
-        <input className="input max-w-xs" placeholder="Buscar cliente o código..." value={filtro} onChange={e => setFiltro(e.target.value)} />
-        <select className="input !w-auto text-sm py-2" value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}>
+        <input
+          className="input max-w-xs"
+          placeholder="Buscar cliente o código..."
+          value={filtro}
+          onChange={e => setFiltro(e.target.value)}
+        />
+        <select
+          className="input !w-auto text-sm py-2"
+          value={filtroEstado}
+          onChange={e => setFiltroEstado(e.target.value)}
+        >
           <option value="">Todos los estados</option>
           {Object.entries(ESTADO_CONFIG).map(([k, v]) => (
             <option key={k} value={k}>{v.label}</option>
@@ -105,9 +122,13 @@ export default function Ventas() {
         </select>
         <div className="flex bg-slate-800 rounded-xl p-1 gap-1">
           {['kanban', 'lista'].map(v => (
-            <button key={v} onClick={() => setVista(v)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${vista === v ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>
-              <i className={`fas ${v === 'kanban' ? 'fa-columns' : 'fa-list'} mr-1.5`} />{v === 'kanban' ? 'Kanban' : 'Lista'}
+            <button
+              key={v}
+              onClick={() => setVista(v)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${vista === v ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+            >
+              <i className={`fas ${v === 'kanban' ? 'fa-columns' : 'fa-list'} mr-1.5`} />
+              {v === 'kanban' ? 'Kanban' : 'Lista'}
             </button>
           ))}
         </div>
@@ -123,14 +144,14 @@ export default function Ventas() {
               Limpiar entregadas ({entregadasVisibles})
             </button>
           )}
-          {idsOcultos.length > 0 && (
+          {ultimoLote.length > 0 && (
             <button
               className="btn-ghost text-xs text-slate-500 hover:text-slate-300 transition-colors"
               onClick={restaurarEntregadas}
-              title="Volver a mostrar las ventas entregadas ocultas"
+              title="Deshacer la última limpieza"
             >
               <i className="fas fa-rotate-left mr-1" />
-              Restaurar ({idsOcultos.length})
+              Deshacer ({ultimoLote.length})
             </button>
           )}
           <button className="btn-primary" onClick={() => setModalNueva(true)}>
@@ -145,9 +166,12 @@ export default function Ventas() {
           const count = ventas.filter(v => v.estado === estado).length
           const c = ESTADO_CONFIG[estado]
           return (
-            <button key={estado} onClick={() => setFiltroEstado(filtroEstado === estado ? '' : estado)}
+            <button
+              key={estado}
+              onClick={() => setFiltroEstado(filtroEstado === estado ? '' : estado)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all
-                ${filtroEstado === estado ? `${c.bg} ${c.text} ring-1 ring-current` : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}>
+                ${filtroEstado === estado ? `${c.bg} ${c.text} ring-1 ring-current` : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
+            >
               <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
               {c.label} <span className="font-bold">{count}</span>
             </button>
@@ -157,40 +181,41 @@ export default function Ventas() {
 
       {/* Vista Kanban */}
       {vista === 'kanban' && (
-        <div className="flex gap-3 overflow-x-auto pb-4">
-          {ESTADOS_VENTA.map(estado => {
-            const cols = filtradas.filter(v => v.estado === estado)
-            const cfg = ESTADO_CONFIG[estado]
-            return (
-              <div key={estado} className="flex-shrink-0 w-64">
-                <div className="flex items-center justify-between mb-3 px-1">
-                  <BadgeVenta estado={estado} />
-                  <span className="text-xs text-slate-500 font-medium">{cols.length}</span>
+        <div className="w-full overflow-x-auto pb-4">
+          <div className="flex gap-3 min-w-full">
+            {ESTADOS_VENTA.map(estado => {
+              const cols = filtradas.filter(v => v.estado === estado)
+              return (
+                <div key={estado} className="flex-1 min-w-[220px]">
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <BadgeVenta estado={estado} />
+                    <span className="text-xs text-slate-500 font-medium">{cols.length}</span>
+                  </div>
+                  <div className="space-y-2.5 min-h-[80px]">
+                    {cols.length === 0 && (
+                      <div className="border-2 border-dashed border-slate-700/40 rounded-xl p-5 text-center">
+                        <p className="text-xs text-slate-600">Sin ventas</p>
+                      </div>
+                    )}
+                    {cols.map(v => <VentaCard key={v.id} venta={v} onClick={() => setDetalle(v)} />)}
+                  </div>
                 </div>
-                <div className="space-y-2.5 min-h-[80px]">
-                  {cols.length === 0 && (
-                    <div className="border-2 border-dashed border-slate-700/40 rounded-xl p-5 text-center">
-                      <p className="text-xs text-slate-600">Sin ventas</p>
-                    </div>
-                  )}
-                  {cols.map(v => <VentaCard key={v.id} venta={v} onClick={() => setDetalle(v)} />)}
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       )}
 
       {/* Vista Lista */}
       {vista === 'lista' && (
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden w-full">
           {filtradas.length === 0
             ? <Empty icon="fa-shopping-bag" titulo="Sin ventas" sub="Registra la primera venta con el botón de arriba" />
             : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-700/60">
-                    {['Código','Cliente','Total','Estado','Pago','Canal','Fecha',''].map(h => (
+                    {['Código', 'Cliente', 'Total', 'Estado', 'Pago', 'Canal', 'Fecha', ''].map(h => (
                       <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">{h}</th>
                     ))}
                   </tr>
@@ -236,8 +261,10 @@ export default function Ventas() {
 
 function VentaCard({ venta: v, onClick }) {
   return (
-    <button onClick={onClick}
-      className="w-full card p-4 text-left hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-200 active:scale-[0.98]">
+    <button
+      onClick={onClick}
+      className="w-full card p-4 text-left hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-200 active:scale-[0.98]"
+    >
       <div className="flex items-start justify-between gap-2 mb-2">
         <p className="font-semibold text-white text-sm truncate">{v.cliente?.nombre}</p>
         <p className="text-xs font-mono text-indigo-300 flex-shrink-0">{v.codigo?.slice(-7)}</p>
@@ -255,7 +282,9 @@ function VentaCard({ venta: v, onClick }) {
         <span className="text-[10px] text-slate-600">{tiempoRelativo(v.created_at)}</span>
       </div>
       {!v.pago_confirmado && (
-        <p className="mt-2 text-[10px] text-amber-400 flex items-center gap-1"><i className="fas fa-clock" /> Pago pendiente</p>
+        <p className="mt-2 text-[10px] text-amber-400 flex items-center gap-1">
+          <i className="fas fa-clock" /> Pago pendiente
+        </p>
       )}
     </button>
   )
@@ -305,7 +334,7 @@ function DetalleVenta({ venta: v, onCambiarEstado }) {
       <div>
         <p className="label">Flujo de la venta</p>
         <div className="flex items-center gap-1 mb-4">
-          {['confirmado','elaboracion','enviado','entregado'].map((e, idx, arr) => {
+          {['confirmado', 'elaboracion', 'enviado', 'entregado'].map((e, idx, arr) => {
             const c = ESTADO_CONFIG[e]
             const activo = e === v.estado
             const pasado = arr.indexOf(v.estado) > idx
@@ -327,9 +356,13 @@ function DetalleVenta({ venta: v, onCambiarEstado }) {
           <p className="label">Cambiar a</p>
           <div className="flex flex-wrap gap-2">
             {transiciones.map(e => (
-              <button key={e} disabled={cambiando} onClick={() => handleCambio(e)}
-                className={`btn-secondary text-sm ${e === 'cancelado' ? '!text-red-400 hover:!bg-red-500/10' : ''}`}>
-                {cambiando ? <i className="fas fa-spinner fa-spin" /> : <i className={`fas fa-arrow-right`} />}
+              <button
+                key={e}
+                disabled={cambiando}
+                onClick={() => handleCambio(e)}
+                className={`btn-secondary text-sm ${e === 'cancelado' ? '!text-red-400 hover:!bg-red-500/10' : ''}`}
+              >
+                {cambiando ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-arrow-right" />}
                 {ESTADO_CONFIG[e]?.label}
               </button>
             ))}
@@ -357,7 +390,9 @@ function NuevaVentaForm({ onSuccess }) {
     if (!pid || form.items.find(i => i.producto_id === pid)) return
     setForm(f => ({ ...f, items: [...f.items, { producto_id: pid, cantidad: 1 }] }))
   }
-  const cambiarCantidad = (pid, qty) => setForm(f => ({ ...f, items: f.items.map(i => i.producto_id === pid ? { ...i, cantidad: Math.max(1, parseInt(qty)||1) } : i) }))
+  const cambiarCantidad = (pid, qty) => setForm(f => ({
+    ...f, items: f.items.map(i => i.producto_id === pid ? { ...i, cantidad: Math.max(1, parseInt(qty) || 1) } : i)
+  }))
   const quitarItem = (pid) => setForm(f => ({ ...f, items: f.items.filter(i => i.producto_id !== pid) }))
 
   const total = form.items.reduce((s, item) => {
@@ -421,9 +456,17 @@ function NuevaVentaForm({ onSuccess }) {
             return (
               <div key={item.producto_id} className="flex items-center gap-3 bg-slate-800/60 rounded-xl px-4 py-2.5">
                 <span className="flex-1 text-sm text-white">{prod.nombre}</span>
-                <input type="number" min="1" value={item.cantidad} onChange={e => cambiarCantidad(item.producto_id, e.target.value)} className="input !w-16 text-center py-1.5" />
-                <span className="text-emerald-300 text-sm font-bold w-24 text-right">{formatCOP(parseFloat(prod.precio_venta) * item.cantidad)}</span>
-                <button onClick={() => quitarItem(item.producto_id)} className="text-red-400 hover:text-red-300 p-1"><i className="fas fa-times" /></button>
+                <input
+                  type="number" min="1" value={item.cantidad}
+                  onChange={e => cambiarCantidad(item.producto_id, e.target.value)}
+                  className="input !w-16 text-center py-1.5"
+                />
+                <span className="text-emerald-300 text-sm font-bold w-24 text-right">
+                  {formatCOP(parseFloat(prod.precio_venta) * item.cantidad)}
+                </span>
+                <button onClick={() => quitarItem(item.producto_id)} className="text-red-400 hover:text-red-300 p-1">
+                  <i className="fas fa-times" />
+                </button>
               </div>
             )
           })}
@@ -435,7 +478,12 @@ function NuevaVentaForm({ onSuccess }) {
       )}
       <div>
         <label className="label">Notas</label>
-        <textarea className="input resize-none" rows={2} value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} placeholder="Instrucciones, personalización..." />
+        <textarea
+          className="input resize-none" rows={2}
+          value={form.notas}
+          onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
+          placeholder="Instrucciones, personalización..."
+        />
       </div>
       <button onClick={handleSubmit} disabled={guardando} className="btn-primary w-full justify-center">
         {guardando ? <><i className="fas fa-spinner fa-spin" /> Creando...</> : <><i className="fas fa-check" /> Crear venta</>}
