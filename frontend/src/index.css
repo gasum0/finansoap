@@ -117,3 +117,84 @@
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* ─── Modo claro: override de clases Tailwind hardcodeadas ─── */
+[data-theme="light"] {
+  /* Textos */
+  .text-white        { color: #0f172a !important; }
+  .text-slate-100    { color: #1e293b !important; }
+  .text-slate-200    { color: #1e293b !important; }
+  .text-slate-300    { color: #334155 !important; }
+  .text-slate-400    { color: #475569 !important; }
+  .text-slate-500    { color: #64748b !important; }
+  .text-slate-600    { color: #94a3b8 !important; }
+
+  /* Fondos de cards y contenedores */
+  .bg-slate-900      { background: #ffffff !important; }
+  .bg-slate-800      { background: #f8fafc !important; }
+  .bg-slate-800\/60  { background: rgba(241,245,249,0.8) !important; }
+  .bg-slate-800\/40  { background: rgba(241,245,249,0.6) !important; }
+  .bg-slate-700      { background: #e2e8f0 !important; }
+  .bg-slate-700\/60  { background: rgba(226,232,240,0.8) !important; }
+  .bg-slate-700\/40  { background: rgba(226,232,240,0.5) !important; }
+  .bg-slate-700\/50  { background: rgba(226,232,240,0.6) !important; }
+  .bg-slate-950      { background: #f1f5f9 !important; }
+  .bg-slate-950\/90  { background: rgba(241,245,249,0.95) !important; }
+
+  /* Bordes */
+  .border-slate-700  { border-color: #e2e8f0 !important; }
+  .border-slate-700\/60 { border-color: rgba(226,232,240,0.8) !important; }
+  .border-slate-700\/40 { border-color: rgba(226,232,240,0.6) !important; }
+  .border-slate-700\/50 { border-color: rgba(226,232,240,0.7) !important; }
+  .border-slate-600  { border-color: #cbd5e1 !important; }
+  .border-slate-600\/50 { border-color: rgba(203,213,225,0.6) !important; }
+
+  /* Hover fondos */
+  .hover\:bg-slate-700\/60:hover { background: rgba(226,232,240,0.7) !important; }
+  .hover\:bg-slate-800\/50:hover { background: rgba(241,245,249,0.9) !important; }
+  .hover\:bg-slate-700:hover     { background: #e2e8f0 !important; }
+  .hover\:bg-slate-600:hover     { background: #cbd5e1 !important; }
+
+  /* Inputs y selects */
+  select.input option {
+    background: #ffffff;
+    color: #0f172a;
+  }
+
+  /* Topbar y sidebar */
+  .topbar { 
+    background: rgba(241,245,249,0.95) !important; 
+    border-color: #e2e8f0 !important;
+  }
+
+  /* Tabla */
+  .table-row:hover { background: rgba(99,102,241,0.05) !important; }
+
+  /* Bordes de dashed */
+  .border-slate-700\/40 { border-color: rgba(203,213,225,0.6) !important; }
+
+  /* Textos de código/mono */
+  .font-mono { color: #4f46e5 !important; }
+
+  /* Gradiente del card stat */
+  .stat-card { 
+    background: #ffffff !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
+  }
+
+  /* Modal overlay */
+  .bg-slate-900.border-slate-700\/60 {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  /* Kanban cards vacíos */
+  .border-slate-700\/40 {
+    border-color: rgba(203,213,225,0.7) !important;
+  }
+
+  /* Badge colores neutros */
+  .bg-slate-700.text-slate-400 {
+    background: #e2e8f0 !important;
+    color: #64748b !important;
+  }
+}
